@@ -66,7 +66,7 @@ for(i in (N.super.init+1):M){
   z.stop.init[i] <- stop
 }
 z.super.init <- c(rep(1,N.super.init),rep(0,M-N.super.init))
-z.obs.init <- 1*(rowSums(y.init)>0) #indicator for "ever observed"
+z.obs <- 1*(rowSums(y.init)>0) #indicator for "ever observed"
 
 #initialize N structures from z.init
 N.init <- colSums(z.init[z.super.init==1,])
@@ -120,7 +120,7 @@ ER.nodes <- Rmodel$expandNodeNames(paste0("ER[1:",n.year-1,"]"))
 z.nodes <- Rmodel$expandNodeNames(paste0("z[1:",M,",1]"))
 calcNodes <- c(N.nodes,N.recruit.nodes,y.nodes,z.nodes) #the ones that need likelihoods updated in mvSaved
 conf$addSampler(target = c("z"),
-                type = 'zSampler',control = list(M=M,n.year=n.year,z.obs=z.obs.init,z.super.ups=z.super.ups,
+                type = 'zSampler',control = list(M=M,n.year=n.year,z.obs=z.obs,z.super.ups=z.super.ups,
                                                  y.nodes=y.nodes,N.nodes=N.nodes,z.nodes=z.nodes,
                                                  ER.nodes=ER.nodes,N.survive.nodes=N.survive.nodes,
                                                  N.recruit.nodes=N.recruit.nodes,
