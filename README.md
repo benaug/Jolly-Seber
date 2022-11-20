@@ -14,3 +14,6 @@ This approach has some efficiency benefits and perhaps costs (not sure, yet).
 3) for individuals never detected, whether in the super population or not: I propose entire z vectors for each individual. I propose the recruitment occasion, z.start, (including the possibility of being there in the first year). Then, I simulate survival from the proposed recruitment occasion. Then, I use a Metropolis-Hastings update. 
 
 4) handling the superpopulation: I use the exact same algorithm I use in my multisession samplers (on Github, SCR Multisession). Part of this approach is that we can not evaluate the observation model for individuals not currently in the superpopulation, which improves efficiency (dBinomialVector). Using the current observation model, the savings may not be large, but they grow when adding traps (for SCR) and/or occasions (required for occasion effects on p)
+
+
+Final Note: Ruth King suggested to me that the birth and death primary occasions could be updated instead of the individual z's right before I worked on this. I would like to think I would have thought of this myself, but can't be sure! So, I will credit Ruth for this observation.
