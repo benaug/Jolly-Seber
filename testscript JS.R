@@ -20,7 +20,7 @@ nimbleOptions('MCMCjointlySamplePredictiveBranches')
 
 n.year <- 5 #number of years
 lambda.y1 <- 200 #expected N in year 1
-gamma<- rep(0.2,n.year) #yearly per-capita recruitment
+gamma<- rep(0.2,n.year) #yearly per-capita recruitment (there are only n.year-1 recruitment parameters, data simulator ignores 1st entry, need to fix this.)
 beta0.phi <- qlogis(0.85) #survival intercept
 #simulating yearly survival offsets here, but really need large populations or simpler model to estimate with much
 #precision, at least with effect sizes simulated here (can increase the simulation variance on next line)
