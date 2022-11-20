@@ -31,7 +31,7 @@ NimModel <- nimbleCode({
     for(g in 2:(n.year-1)){
       logit(phi[i,g]) <- beta0.phi + beta1.phi[g-1] + beta2.phi*phi.cov[i] #individual by year survival
     }
-    #survival likelihood that only sums from z.start to z.stop
+    #survival likelihood (bernoulli) that only sums from z.start to z.stop
     z[i,1:n.year] ~ dSurvival(phi=phi[i,1:(n.year-1)],z.start=z.start[i],z.stop=z.stop[i])
   }
   
