@@ -46,6 +46,7 @@ data <- sim.JS.SCR(lambda.y1=lambda.y1,gamma=gamma,n.year=n.year,
 ##Initialize##
 M <- 200 #data augmentation level. Check N.super posterior to make sure it never hits M
 N.super.init <- nrow(data$y)
+X <- data$X #pull X from data (won't be in environment if not simulated directly above)
 if(N.super.init > M) stop("Must augment more than number of individuals captured")
 J <- unlist(lapply(X,nrow)) #traps per year
 J.max <- max(J)
