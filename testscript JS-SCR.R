@@ -161,8 +161,8 @@ z.super.ups <- round(M*0.2) #how many z.super update proposals per iteration?
 #loop here bc potentially different numbers of traps to vectorize in each year
 y.nodes <- pd.nodes <- c()
 for(g in 1:n.year){
-  y.nodes <- c(y.nodes,Rmodel$expandNodeNames(paste0("y[1:",M,",1:",n.year,",1:",J[g],"]"))) #if you change y structure, change here
-  pd.nodes <- c(pd.nodes,Rmodel$expandNodeNames(paste0("pd[1:",M,",1:",n.year,",1:",J[g],"]"))) #if you change y structure, change here
+  y.nodes <- c(y.nodes,Rmodel$expandNodeNames(paste0("y[1:",M,",",g,",1:",J[g],"]"))) #if you change y structure, change here
+  pd.nodes <- c(pd.nodes,Rmodel$expandNodeNames(paste0("pd[1:",M,",",g,",1:",J[g],"]"))) #if you change y structure, change here
 }
 N.nodes <- Rmodel$expandNodeNames(paste0("N"))
 N.survive.nodes <- Rmodel$expandNodeNames(paste0("N.survive[1:",n.year-1,"]"))

@@ -65,6 +65,7 @@ rBinomialVector <- nimbleFunction(
   }
 )
 
+
 #all z updates live here
 zSampler <- nimbleFunction(
   contains = sampler_BASE,

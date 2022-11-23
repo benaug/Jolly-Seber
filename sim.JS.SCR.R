@@ -76,6 +76,6 @@ sim.JS.SCR <- function(lambda.y1=NA,gamma=NA,n.year=NA,
   keep.idx=which(rowSums(y)>0)
   y=y[keep.idx,,]
   cov=cov[keep.idx]
-  return(list(y=y,cov=cov,N=N,N.recruit=N.recruit,N.survive=N.survive,X=X,
+  return(list(y=y,cov=cov,N=N,N.recruit=N.recruit,N.survive=N.survive,X=X,K=K,
               xlim=xlim,ylim=ylim,truth=truth))
 }
