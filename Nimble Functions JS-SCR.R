@@ -33,7 +33,9 @@ GetDetectionProb <- nimbleFunction(
   run = function(s = double(1), p0=double(0), sigma=double(0), 
                  X=double(2), J=double(0), z=double(0), z.super=double(0)){ 
     returnType(double(1))
-    if(z.super==0 | z.super==1&z==0)return(rep(0,J)) #skip calculation if not is superpop, or in superpop, but not alive in this year
+    if(z.super==0 | z.super==1&z==0){
+      return(rep(0,J)) #skip calculation if not is superpop, or in superpop, but not alive in this year
+    }
     if(z==1){ #otherwise calculate
       d2 <- ((s[1]-X[1:J,1])^2 + (s[2]-X[1:J,2])^2)
       ans <- p0*exp(-d2/(2*sigma^2))
@@ -59,18 +61,18 @@ dBinomialVector <- nimbleFunction(
 rBinomialVector <- nimbleFunction(
   run = function(n = integer(0), pd = double(1), K = double(1), z = double(0), z.super = double(0)) {
     returnType(double(1))
-    J=nimDim(pd)[1]
-    out=numeric(J,value=0)
+    J <- nimDim(pd)[1]
+    out <- numeric(J,value=0)
     return(out)
   }
 )
-
 
 #all z updates live here
 zSampler <- nimbleFunction(
   contains = sampler_BASE,
   setup = function(model, mvSaved, target, control) {
     M <- control$M
+    J <- control$J
     y2D <- control$y2D
     z.super.ups <- control$z.super.ups
     n.year <- control$n.year
@@ -97,14 +99,14 @@ zSampler <- nimbleFunction(
         dets <- which(y2D[i,]>0)
         first.det <- min(dets)
         lp.start <- rep(-Inf,n.year)
-        i.idx=seq(i,M*n.year,M) #used to reference correct y and pd nodes
+        i.idx <- seq(i,M*n.year,M) #used to reference correct y and pd nodes
         for(g in 1:first.det){ #must be recruited in year with first detection or before
           z.start.prop <- g
           model$z.start[i] <<- z.start.prop
           z.prop <- rep(0,n.year)
           z.prop[g:first.det] <- 1 #must be alive until first detection
           if(first.det < n.year){
-            z.prop[(first.det+1):n.year]=z.curr[(first.det+1):n.year] #fill in remaining current z values, keeping death event the same
+            z.prop[(first.det+1):n.year] <- z.curr[(first.det+1):n.year] #fill in remaining current z values, keeping death event the same
           }
           model$z[i,] <<- z.prop
           
@@ -121,22 +123,15 @@ zSampler <- nimbleFunction(
           }
           #3) Update N.survive
           model$N.survive <<- model$N[2:n.year]-model$N.recruit #survivors are guys alive in year g-1 minus recruits in this year g
-          # #first approach here, less efficient
-          # for(g2 in 2:n.year){
-          #   model$N.recruit[g2-1] <<- sum(model$z[,g2-1]==0&model$z[,g2]==1&model$z.super==1)
-          # }
-          # for(g2 in 1:n.year){
-          #   model$N[g2] <<- sum(model$z[model$z.super==1,g2]) #need all years except last for effect on ER. Just doing them all.
-          # }
-          model$calculate(ER.nodes)
+          model$calculate(ER.nodes) #update ER when N updated
+          model$calculate(pd.nodes[i.idx]) #update pd nodes when a z changes
           # recruit likelihood conditional on having recruited (or alive in year 1)
           recruit.probs <- c(model$lambda.y1,model$ER)
           recruit.probs <- recruit.probs/sum(recruit.probs)
           lp.recruit <- sum(log(recruit.probs[model$z.start])) #must consider all inds since ER can change. this is dcat()
-          model$calculate(pd.nodes[i.idx]) #update pd nodes
           lp.y <- model$calculate(y.nodes[i.idx])
           lp.surv <- model$calculate(z.nodes[i])
-          lp.start[g] <- lp.recruit + lp.y + lp.surv # + lp.N1
+          lp.start[g] <- lp.recruit + lp.y + lp.surv
         }
         maxlp <- max(lp.start) #deal with overflow
         prop.probs <- exp(lp.start-maxlp)
@@ -162,16 +157,9 @@ zSampler <- nimbleFunction(
             model$N.recruit[z.start.prop-1] <<- N.recruit.curr[z.start.prop-1] + 1
           }
           model$N.survive <<- model$N[2:n.year]-model$N.recruit #survivors are guys alive in year g-1 minus recruits in this year g
-          # #first approach here, less efficient
-          # for(g in 2:n.year){
-          #   model$N.recruit[g-1] <<- sum(model$z[,g-1]==0&model$z[,g]==1&model$z.super==1)
-          #   model$N.survive[g-1] <<- sum(model$z[,g-1]==1&model$z[,g]==1&model$z.super==1)
-          # }
-          # for(g in 1:n.year){
-          #   model$N[g] <<- sum(model$z[model$z.super==1,g])
-          # }
-          model$calculate(ER.nodes)
+          model$calculate(ER.nodes) #update ER when N updated
           model$calculate(pd.nodes[i.idx]) #update pd nodes
+          #update these logProbs
           model$calculate(y.nodes[i.idx])
           model$calculate(N.nodes[1])
           model$calculate(N.recruit.nodes)
@@ -182,6 +170,11 @@ zSampler <- nimbleFunction(
           mvSaved["N.survive",1] <<- model[["N.survive"]]
           mvSaved["N.recruit",1] <<- model[["N.recruit"]]
           mvSaved["ER",1] <<- model[["ER"]]
+          for(g in 1:n.year){
+            for(j in 1:J[g]){
+              mvSaved["pd",1][i,g,j] <<- model[["pd"]][i,g,j]
+            }
+          }
         }else{
           model[["z.start"]][i] <<- mvSaved["z.start",1][i]
           model[["z"]][i,] <<- mvSaved["z",1][i,]
@@ -189,9 +182,12 @@ zSampler <- nimbleFunction(
           model[["N.survive"]] <<- mvSaved["N.survive",1]
           model[["N.recruit"]] <<- mvSaved["N.recruit",1]
           model[["ER"]] <<- mvSaved["ER",1]
-          #set these back
-          model$calculate(ER.nodes)
-          model$calculate(pd.nodes[i.idx]) #update pd nodes
+          for(g in 1:n.year){
+            for(j in 1:J[g]){
+              model[["pd"]][i,g,j] <<- mvSaved["pd",1][i,g,j]
+            }
+          }
+          #set these logProbs back
           model$calculate(y.nodes[i.idx])
           model$calculate(N.nodes[1])
           model$calculate(N.recruit.nodes)
@@ -210,7 +206,7 @@ zSampler <- nimbleFunction(
         dets <- which(y2D[i,]>0)
         last.det <- max(dets)
         lp.stop <- rep(-Inf,n.year)
-        i.idx=seq(i,M*n.year,M) #used to reference correct y and pd nodes
+        i.idx <- seq(i,M*n.year,M) #used to reference correct y and pd nodes
         for(g in (last.det):n.year){ #can't die on or before year of last detection
           model$z.stop[i] <<- g
           z.prop <- rep(0,n.year)
@@ -219,17 +215,12 @@ zSampler <- nimbleFunction(
           model$z[i,] <<- z.prop
           #update N, number of recruits does not change going backwards
           model$N <<- N.curr - z.curr + z.prop
-          # #first approach here, less efficient
-          # #number of recruits never change going backwards. but ER does.
-          # for(g2 in 1:n.year){
-          #   model$N[g2] <<- sum(model$z[model$z.super==1,g2]) #need all years except last for effect on ER. Just doing them all.
-          # }
-          model$calculate(ER.nodes)
+          model$calculate(ER.nodes) #update ER when N updated
+          model$calculate(pd.nodes[i.idx]) #update pd nodes when z changes
           # recruit likelihood conditional on having recruited (or alive in year 1)
           recruit.probs <- c(model$lambda.y1,model$ER)
           recruit.probs <- recruit.probs/sum(recruit.probs)
           lp.recruit <- sum(log(recruit.probs[model$z.start])) #must consider all inds since ER can change. this is dcat()
-          model$calculate(pd.nodes[i.idx]) #update pd nodes
           lp.y <- model$calculate(y.nodes[i.idx])
           lp.surv <- model$calculate(z.nodes[i])
           lp.stop[g] <- lp.recruit + lp.y + lp.surv # + lp.N1
@@ -247,17 +238,11 @@ zSampler <- nimbleFunction(
           model$z[i,] <<- z.prop
           model$N <<- N.curr - z.curr + z.prop
           model$N.survive <<- model$N[2:n.year]-model$N.recruit #survivors are guys alive in year g-1 minus recruits in this year g
-          # #first approach here, less efficient
-          # for(g in 2:n.year){
-          #   model$N.survive[g-1] <<- sum(model$z[,g-1]==1&model$z[,g]==1&model$z.super==1)
-          # }
-          # for(g in 1:n.year){
-          #   model$N[g] <<- sum(model$z[model$z.super==1,g])
-          # }
-          model$calculate(ER.nodes)
+          model$calculate(ER.nodes) #update ER when N updated
+          model$calculate(pd.nodes[i.idx]) #update pd nodes when z changes
+          #update these logProbs
           model$calculate(N.nodes[1])
           model$calculate(N.recruit.nodes)
-          model$calculate(pd.nodes[i.idx]) #update pd nodes
           model$calculate(y.nodes[i.idx])
           model$calculate(z.nodes[i])
           mvSaved["z.stop",1][i] <<- model[["z.stop"]][i]
@@ -265,15 +250,23 @@ zSampler <- nimbleFunction(
           mvSaved["N",1] <<- model[["N"]]
           mvSaved["N.survive",1] <<- model[["N.survive"]]
           mvSaved["ER",1] <<- model[["ER"]]
+          for(g in 1:n.year){
+            for(j in 1:J[g]){
+              mvSaved["pd",1][i,g,j] <<- model[["pd"]][i,g,j]
+            }
+          }
         }else{
           model[["z.stop"]][i] <<- mvSaved["z.stop",1][i]
           model[["z"]][i,] <<- mvSaved["z",1][i,]
           model[["N"]] <<- mvSaved["N",1]
           model[["N.survive"]] <<- mvSaved["N.survive",1]
           model[["ER"]] <<- mvSaved["ER",1]
-          #set these back
-          model$calculate(ER.nodes)
-          model$calculate(pd.nodes[i.idx]) #update pd nodes
+          for(g in 1:n.year){
+            for(j in 1:J[g]){
+              model[["pd"]][i,g,j] <<- mvSaved["pd",1][i,g,j]
+            }
+          }
+          #set these logProbs back
           model$calculate(y.nodes[i.idx])
           model$calculate(N.nodes[1])
           model$calculate(N.recruit.nodes)
@@ -287,12 +280,12 @@ zSampler <- nimbleFunction(
         z.curr <- model$z[i,]
         z.start.curr <- model$z.start[i]
         z.stop.curr <- model$z.stop[i]
-        i.idx=seq(i,M*n.year,M) #used to reference correct y and pd nodes
+        i.idx <- seq(i,M*n.year,M) #used to reference correct y and pd nodes
+        model$calculate(pd.nodes[i.idx]) #update pd nodes when z changes
         # recruit likelihood conditional on having recruited (or alive in year 1)
         recruit.probs <- c(model$lambda.y1,model$ER)
         recruit.probs <- recruit.probs/sum(recruit.probs)
         lp.initial.recruit <- sum(log(recruit.probs[model$z.start])) #must consider all inds since ER can change. this is dcat()
-        model$calculate(pd.nodes[i.idx]) #update pd nodes
         lp.initial.y <- model$calculate(y.nodes[i.idx])
         lp.initial.surv <- model$calculate(z.nodes[i])
 
@@ -332,18 +325,12 @@ zSampler <- nimbleFunction(
           #3) Update N.survive
           model$N.survive <<- model$N[2:n.year]-model$N.recruit #survivors are guys alive in year g-1 minus recruits in this year g
         }
-        # #first approach here, less efficient
-        # for(g in 2:n.year){
-        #   model$N.recruit[g-1] <<- sum(model$z[,g-1]==0&model$z[,g]==1&model$z.super==1)
-        #   model$N.survive[g-1] <<- sum(model$z[,g-1]==1&model$z[,g]==1&model$z.super==1)
-        # }
-
-        model$calculate(ER.nodes)
+        model$calculate(ER.nodes) #update ER when N updated
+        model$calculate(pd.nodes[i.idx]) #update pd nodes when z changes
         # recruit likelihood conditional on having recruited (or alive in year 1)
         recruit.probs <- c(model$lambda.y1,model$ER)
         recruit.probs <- recruit.probs/sum(recruit.probs)
         lp.proposed.recruit <- sum(log(recruit.probs[model$z.start])) #must consider all inds since ER can change. this is dcat()
-        model$calculate(pd.nodes[i.idx]) #update pd nodes
         lp.proposed.y <- model$calculate(y.nodes[i.idx])
         lp.proposed.surv <- model$calculate(z.nodes[i])
 
@@ -370,6 +357,11 @@ zSampler <- nimbleFunction(
           mvSaved["N.survive",1] <<- model[["N.survive"]]
           mvSaved["N.recruit",1] <<- model[["N.recruit"]]
           mvSaved["ER",1] <<- model[["ER"]]
+          for(g in 1:n.year){
+            for(j in 1:J[g]){
+              mvSaved["pd",1][i,g,j] <<- model[["pd"]][i,g,j]
+            }
+          }
         }else{
           model[["z.start"]][i] <<- mvSaved["z.start",1][i]
           model[["z.stop"]][i] <<- mvSaved["z.stop",1][i]
@@ -378,11 +370,15 @@ zSampler <- nimbleFunction(
           model[["N.survive"]] <<- mvSaved["N.survive",1]
           model[["N.recruit"]] <<- mvSaved["N.recruit",1]
           model[["ER"]] <<- mvSaved["ER",1]
-          #set these back
-          model$calculate(ER.nodes)
-          model$calculate(pd.nodes[i.idx]) #update pd nodes
+          for(g in 1:n.year){
+            for(j in 1:J[g]){
+              model[["pd"]][i,g,j] <<- mvSaved["pd",1][i,g,j]
+            }
+          }
+          #set these logProbs back
           model$calculate(y.nodes[i.idx])
           model$calculate(N.recruit.nodes)
+          model$calculate(N.nodes[1])
           model$calculate(z.nodes[i])
         }
       }
@@ -402,7 +398,7 @@ zSampler <- nimbleFunction(
           reject <- TRUE #if so, we reject (could never select these inds, but then need to account for asymmetric proposal)
         }
         if(!reject){
-          pick.idx=seq(pick,M*n.year,M) #used to reference correct y and pd nodes
+          pick.idx <- seq(pick,M*n.year,M) #used to reference correct y and pd nodes
           #get initial logprobs
           lp.initial.N <- model$getLogProb(N.nodes[1])
           lp.initial.N.recruit <- model$getLogProb(N.recruit.nodes)
@@ -421,18 +417,12 @@ zSampler <- nimbleFunction(
           }
           #3) Update N.survive
           model$N.survive <<- model$N[2:n.year]-model$N.recruit #survivors are guys alive in year g-1 minus recruits in this year g
-          # #first approach here, less efficient
-          # for(g in 2:n.year){
-          #   model$N.recruit[g-1] <<- sum(model$z[,g-1]==0&model$z[,g]==1&model$z.super==1)
-          #   model$N.survive[g-1] <<- sum(model$z[,g-1]==1&model$z[,g]==1&model$z.super==1)
-          # }
-          # for(g in 1:n.year){
-          #   model$N[g] <<- sum(model$z[model$z.super==1,g])
-          # }
+          
+          model$calculate(ER.nodes) #update ER when N updated
+          model$calculate(pd.nodes[pick.idx]) #update pd nodes when z changes
           #get proposed logprobs for N and y
           lp.proposed.N <- model$calculate(N.nodes[1])
           lp.proposed.N.recruit <- model$calculate(N.recruit.nodes)
-          model$calculate(pd.nodes[pick.idx]) #update pd nodes
           lp.proposed.y <- model$calculate(y.nodes[pick.idx]) #will always be 0
 
           lp.initial.total <- lp.initial.N + lp.initial.y + lp.initial.N.recruit
@@ -449,6 +439,11 @@ zSampler <- nimbleFunction(
             mvSaved["N.recruit",1] <<- model[["N.recruit"]]
             mvSaved["N.super",1][1] <<- model[["N.super"]]
             mvSaved["ER",1] <<- model[["ER"]]
+            for(g in 1:n.year){
+              for(j in 1:J[g]){
+                mvSaved["pd",1][i,g,j] <<- model[["pd"]][i,g,j]
+              }
+            }
           }else{
             model[["z.super"]] <<- mvSaved["z.super",1]
             model[["N"]] <<- mvSaved["N",1]
@@ -456,11 +451,14 @@ zSampler <- nimbleFunction(
             model[["N.recruit"]] <<- mvSaved["N.recruit",1]
             model[["N.super"]] <<- mvSaved["N.super",1][1]
             model[["ER"]] <<- mvSaved["ER",1]
-            #set these back
-            model$calculate(ER.nodes)
+            for(g in 1:n.year){
+              for(j in 1:J[g]){
+                model[["pd"]][i,g,j] <<- mvSaved["pd",1][i,g,j]
+              }
+            }
+            #set these logProbs back
             model$calculate(N.nodes[1])
             model$calculate(N.recruit.nodes)
-            model$calculate(pd.nodes[pick.idx]) #update pd nodes
             model$calculate(y.nodes[pick.idx])
           }
         }
@@ -470,9 +468,9 @@ zSampler <- nimbleFunction(
           n.z.off <- length(z.off)
           pick <- rcat(1,rep(1/n.z.off,n.z.off)) #select one of these individuals
           pick <- z.off[pick]
-          pick.idx=seq(pick,M*n.year,M)
+          pick.idx <- seq(pick,M*n.year,M)
 
-          #get initial logprobs
+          #get initial logProbs
           lp.initial.N <- model$getLogProb(N.nodes[1])
           lp.initial.N.recruit <- model$getLogProb(N.recruit.nodes)
           lp.initial.y <- model$calculate(y.nodes[pick.idx]) #will always be 0
@@ -490,19 +488,12 @@ zSampler <- nimbleFunction(
           }
           #3) Update N.survive
           model$N.survive <<- model$N[2:n.year] - model$N.recruit #survivors are guys alive in year g-1 minus recruits in this year g
-          # #first approach here, less efficient
-          # for(g in 2:n.year){
-          #   model$N.recruit[g-1] <<- sum(model$z[,g-1]==0&model$z[,g]==1&model$z.super==1)
-          #   model$N.survive[g-1] <<- sum(model$z[,g-1]==1&model$z[,g]==1&model$z.super==1)
-          # }
-          # for(g in 1:n.year){
-          #   model$N[g] <<- sum(model$z[model$z.super==1,g])
-          # }
-
+          
+          model$calculate(ER.nodes) #update ER when N updated
+          model$calculate(pd.nodes[pick.idx]) #update pd nodes when z changes
           #get proposed logprobs for N and y
           lp.proposed.N <- model$calculate(N.nodes[1])
           lp.proposed.N.recruit <- model$calculate(N.recruit.nodes)
-          model$calculate(pd.nodes[pick.idx]) #update pd nodes
           lp.proposed.y <- model$calculate(y.nodes[pick.idx]) #will always be 0
 
           lp.initial.total <- lp.initial.N + lp.initial.y + lp.initial.N.recruit
@@ -511,7 +502,6 @@ zSampler <- nimbleFunction(
           #MH step
           log_MH_ratio <- lp.proposed.total - lp.initial.total
           accept <- decide(log_MH_ratio)
-
           if(accept) {
             mvSaved["z.super",1] <<- model[["z.super"]]
             mvSaved["N",1] <<- model[["N"]]
@@ -519,6 +509,11 @@ zSampler <- nimbleFunction(
             mvSaved["N.recruit",1] <<- model[["N.recruit"]]
             mvSaved["N.super",1][1] <<- model[["N.super"]]
             mvSaved["ER",1] <<- model[["ER"]]
+            for(g in 1:n.year){
+              for(j in 1:J[g]){
+                mvSaved["pd",1][i,g,j] <<- model[["pd"]][i,g,j]
+              }
+            }
           }else{
             model[["z.super"]] <<- mvSaved["z.super",1]
             model[["N"]] <<- mvSaved["N",1]
@@ -526,11 +521,14 @@ zSampler <- nimbleFunction(
             model[["N.recruit"]] <<- mvSaved["N.recruit",1]
             model[["N.super"]] <<- mvSaved["N.super",1][1]
             model[["ER"]] <<- mvSaved["ER",1]
-            #set these back
-            model$calculate(ER.nodes)
+            for(g in 1:n.year){
+              for(j in 1:J[g]){
+                model[["pd"]][i,g,j] <<- mvSaved["pd",1][i,g,j]
+              }
+            }
+            #set these logProbs back
             model$calculate(N.nodes[1])
             model$calculate(N.recruit.nodes)
-            model$calculate(pd.nodes[pick.idx]) #update pd nodes
             model$calculate(y.nodes[pick.idx])
           }
         }

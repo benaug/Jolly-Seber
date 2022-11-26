@@ -18,25 +18,21 @@ source("Nimble Functions JS.R") #contains custom distributions and updates
 nimble:::setNimbleOption('MCMCjointlySamplePredictiveBranches', FALSE)
 nimbleOptions('MCMCjointlySamplePredictiveBranches') 
 
-n.year <- 5 #number of years
+n.year <- 4 #number of years
 lambda.y1 <- 200 #expected N in year 1
-gamma<- rep(0.2,n.year) #yearly per-capita recruitment (there are only n.year-1 recruitment parameters, data simulator ignores 1st entry, need to fix this.)
+gamma <- rep(0.2,n.year-1) #yearly per-capita recruitment
 beta0.phi <- qlogis(0.85) #survival intercept
-#simulating yearly survival offsets here, but really need large populations or simpler model to estimate with much
-#precision, at least with effect sizes simulated here (can increase the simulation variance on next line)
-beta1.phi <- c(0,rnorm(n.year-2,0,0.2)) #survival year offsets, year 1 is intercept. must be of length n.year-1
-plogis(beta0.phi+beta1.phi) #implied yearly survival at cov value of 0
-beta2.phi <- 0.5 #phi response to individual covariate
-p <- rep(0.1,n.year) #yearly detection probabilities
+beta1.phi <- 0.5 #phi response to individual covariate
+p <- rep(0.15,n.year) #yearly detection probabilities
 K <- rep(10,n.year) #yearly sampling occasions
 
 data <- sim.JS(lambda.y1=lambda.y1,gamma=gamma,
             beta0.phi=beta0.phi,beta1.phi=beta1.phi,
-            beta2.phi=beta2.phi,p=p,n.year=n.year,K=K)
+            p=p,n.year=n.year,K=K)
 
 
 ##Initialize##
-M <- 500 #data augmentation level. Check N.super posterior to make sure it never hits M
+M <- 400 #data augmentation level. Check N.super posterior to make sure it never hits M
 N.super.init <- nrow(data$y)
 if(N.super.init > M) stop("Must augment more than number of individuals captured")
 y.init <- matrix(0,M,n.year)
@@ -84,14 +80,14 @@ constants <- list(n.year=n.year, K=K, M=M)
 #inits for Nimble
 Niminits <- list(N=N.init,N.survive=N.survive.init,N.recruit=N.recruit.init,
                  ER=N.recruit.init,N.super=N.super.init,z.super=z.super.init,
-                 beta0.phi=beta0.phi,beta1.phi=beta1.phi[-1],lambda.y1=lambda.y1) #for demonstration. Don't start at truth in practice.
+                 beta0.phi=0,beta1.phi=0)
 
 #data for Nimble
 Nimdata <- list(y=y.init,z=z.init,z.start=z.start.init,z.stop=z.stop.init,phi.cov=phi.cov.data)
 
 # set parameters to monitor
 parameters <- c('N','gamma','N.recruit','N.survive','p','beta0.phi',
-              'beta1.phi','beta2.phi','lambda.y1','N.super','phi.cov.mu','phi.cov.sd')
+              'beta1.phi','lambda.y1','N.super','phi.cov.mu','phi.cov.sd')
 nt <- 1 #thinning rate
 
 # Build the model, configure the mcmc, and compile
@@ -104,7 +100,7 @@ Rmodel <- nimbleModel(code=NimModel, constants=constants, data=Nimdata,check=FAL
 #N.recruit. If you change the model parameters, you will need to make the same changes here. Finally, 
 #we have to tell nimble which nodes to assign samplers for for the individual covariate when manually
 #instructing nimble which samplers to assign.
-config.nodes <- c('beta0.phi','beta1.phi','beta2.phi','gamma','p','lambda.y1',paste('phi.cov[',cov.up,']'),
+config.nodes <- c('beta0.phi','beta1.phi','gamma','p','lambda.y1',paste('phi.cov[',cov.up,']'),
                'phi.cov.mu','phi.cov.sd')
 conf <- configureMCMC(Rmodel,monitors=parameters, thin=nt,
                       nodes=config.nodes,useConjugacy = TRUE)
@@ -158,7 +154,7 @@ plot(mcmc(mvSamples[-c(1:1000),]))
 data$N
 data$N.recruit
 data$N.survive
-data$N[1]+sum(data$N.recruit[-1]) #N.super
+data$N[1]+sum(data$N.recruit) #N.super
 
 
 
@@ -175,17 +171,17 @@ N.count
 Cmodel$N
 
 #check N.recruit count
-N.count <- rep(NA,n.year)
-for(g2 in 1:n.year){
-  N.count[g2] <- sum(Cmodel$z[Cmodel$z.super==1,g2-1]==0&Cmodel$z[Cmodel$z.super==1,g2]==1) 
+N.count <- rep(NA,n.year-1)
+for(g2 in 2:n.year){
+  N.count[g2-1] <- sum(Cmodel$z[Cmodel$z.super==1,g2-1]==0&Cmodel$z[Cmodel$z.super==1,g2]==1) 
 }
 N.count
 Cmodel$N.recruit
 
 #check N.survive count
-N.count <- rep(NA,n.year)
-for(g2 in 1:n.year){
-  N.count[g2] <- sum(Cmodel$z[Cmodel$z.super==1,g2-1]==1&Cmodel$z[Cmodel$z.super==1,g2]==1) 
+N.count <- rep(NA,n.year-1)
+for(g2 in 2:n.year){
+  N.count[g2-1] <- sum(Cmodel$z[Cmodel$z.super==1,g2-1]==1&Cmodel$z[Cmodel$z.super==1,g2]==1) 
 }
 N.count
 Cmodel$N.survive
@@ -193,7 +189,6 @@ Cmodel$N.survive
 #are individual z's consistent with their z.start and z.stop?
 all(apply(Cmodel$z,1,function(x){min(which(x==1))})==Cmodel$z.start)
 all(apply(Cmodel$z,1,function(x){max(which(x==1))})==Cmodel$z.stop)
-
 
 #zombie check
 for(i in 1:M){

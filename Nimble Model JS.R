@@ -16,20 +16,20 @@ NimModel <- nimbleCode({
     N.recruit[g] ~ dpois(ER[g]) #yearly realized recruits
   }
   
-  #Survival (phi must have M x n.year - 1 dimension for custom updates to work)
-  #without individual or time effects, use for loop to plug into phi[i,g]
-  beta0.phi ~ dlogis(0,1)
-  beta2.phi ~ dnorm(0,10) #individual covariate effect on survival
+  #Individual covariates
   phi.cov.mu ~ dunif(-10, 10) #phi individual covariate mean prior
   phi.cov.sd ~ T(dt(mu=0, sigma=1, df=7), 0, Inf) #phi individual covariate sd prior
-  for(g in 2:(n.year-1)){
-    beta1.phi[g-1] ~ dt(mu=0, sigma=2, df=7) #moderately informative prior for yearly offsets for some shrinkage
-  }
   for(i in 1:M){
     phi.cov[i] ~ dnorm(phi.cov.mu, sd = phi.cov.sd)
-    logit(phi[i,1]) <- beta0.phi + beta2.phi*phi.cov[i] #individual by year survival, year 1
-    for(g in 2:(n.year-1)){
-      logit(phi[i,g]) <- beta0.phi + beta1.phi[g-1] + beta2.phi*phi.cov[i] #individual by year survival
+  }
+  
+  #Survival (phi must have M x n.year - 1 dimension for custom updates to work)
+  #without individual or year effects, use for loop to plug into phi[i,g]
+  beta0.phi ~ dlogis(0,1)
+  beta1.phi ~ dnorm(0, sd=10) #individual covariate effect on survival
+  for(i in 1:M){
+    for(g in 1:(n.year-1)){#plugging same individual phi's into each year for custom update
+      logit(phi[i,g]) <- beta0.phi + beta1.phi*phi.cov[i] #individual by year survival
     }
     #survival likelihood (bernoulli) that only sums from z.start to z.stop
     z[i,1:n.year] ~ dSurvival(phi=phi[i,1:(n.year-1)],z.start=z.start[i],z.stop=z.stop[i])

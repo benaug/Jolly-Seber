@@ -28,7 +28,7 @@ NimModel <- nimbleCode({
   #Survival (phi must have M x n.year - 1 dimension for custom updates to work)
   #without individual or year effects, use for loop to plug into phi[i,g]
   beta0.phi ~ dlogis(0,1)
-  beta1.phi ~ dnorm(0,10) #individual covariate effect on survival
+  beta1.phi ~ dnorm(0, sd=10) #individual covariate effect on survival
   for(i in 1:M){
     for(g in 1:(n.year-1)){#plugging same individual phi's into each year for custom update
       logit(phi[i,g]) <- beta0.phi + beta1.phi*phi.cov[i] #individual by year survival

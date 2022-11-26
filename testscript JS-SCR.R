@@ -23,16 +23,16 @@ source("sSampler Fixed.R") # activity center sampler that proposes from prior wh
 nimble:::setNimbleOption('MCMCjointlySamplePredictiveBranches', FALSE)
 nimbleOptions('MCMCjointlySamplePredictiveBranches') 
 
-n.year <- 3 #number of years
+n.year <- 4 #number of years
 lambda.y1 <- 100 #expected N in year 1
-gamma<- rep(0.2,n.year) #yearly per-capita recruitment (there are only n.year-1 recruitment parameters, data simulator ignores 1st entry, need to fix this.)
+gamma <- rep(0.2,n.year-1) #yearly per-capita recruitment
 beta0.phi <- qlogis(0.85) #survival intercept
 beta1.phi <- 0.5 #phi response to individual covariate
-p0 <- rep(0.25,n.year) #yearly detection probabilities at activity center
+p0 <- rep(0.1,n.year) #yearly detection probabilities at activity center
 sigma <- rep(0.5,n.year) #yearly detection function scale
 K <- rep(10,n.year) #yearly sampling occasions
 
-buff=2 #state space buffer. Buffers maximal x and y dimensions of X below across years
+buff <- 2 #state space buffer. Buffers maximal x and y dimensions of X below across years
 X <- vector("list",n.year) #one trapping array per year
 for(g in 1:n.year){ #using same trapping array every year here
   X[[g]] <- as.matrix(expand.grid(3:11,3:11))
@@ -128,16 +128,15 @@ constants <- list(n.year=n.year, K=K, M=M, J=J, xlim=xlim, ylim=ylim, K1D=K1D)
 #inits for Nimble
 Niminits <- list(N=N.init,N.survive=N.survive.init,N.recruit=N.recruit.init,
                  ER=N.recruit.init,N.super=N.super.init,z.super=z.super.init,
-                 s=s.init,
-                 beta0.phi=beta0.phi,beta1.phi=beta1.phi,lambda.y1=lambda.y1) #for demonstration. Don't start at truth in practice.
+                 s=s.init,beta0.phi=0,beta1.phi=0)
 
 #data for Nimble
 Nimdata <- list(y=y.nim,z=z.init,z.start=z.start.init,z.stop=z.stop.init,phi.cov=phi.cov.data,X=X.nim)
 
 # set parameters to monitor
-parameters <- c('N','gamma','N.recruit','N.survive','beta0.phi',
-              'beta1.phi','lambda.y1','N.super','phi.cov.mu','phi.cov.sd',
-              'p0','sigma')
+parameters <- c('N','gamma','N.recruit','N.survive','N.super',
+                'lambda.y1','beta0.phi','beta1.phi',
+                'phi.cov.mu','phi.cov.sd','p0','sigma')
 nt <- 1 #thinning rate
 
 # Build the model, configure the mcmc, and compile
@@ -171,7 +170,8 @@ ER.nodes <- Rmodel$expandNodeNames(paste0("ER[1:",n.year-1,"]"))
 z.nodes <- Rmodel$expandNodeNames(paste0("z[1:",M,",1]"))
 calcNodes <- c(N.nodes,N.recruit.nodes,y.nodes,z.nodes) #the ones that need likelihoods updated in mvSaved
 conf$addSampler(target = c("z"),
-                type = 'zSampler',control = list(M=M,n.year=n.year,z.obs=z.obs,z.super.ups=z.super.ups,
+                type = 'zSampler',control = list(M=M,n.year=n.year,J=J,
+                                                 z.obs=z.obs,z.super.ups=z.super.ups,
                                                  y.nodes=y.nodes,pd.nodes=pd.nodes,N.nodes=N.nodes,
                                                  z.nodes=z.nodes,ER.nodes=ER.nodes,
                                                  N.survive.nodes=N.survive.nodes,
@@ -215,9 +215,7 @@ plot(mcmc(mvSamples[-c(1:1000),]))
 data$N
 data$N.recruit
 data$N.survive
-data$N[1]+sum(data$N.recruit[-1]) #N.super
-
-
+data$N[1]+sum(data$N.recruit) #N.super
 
 
 #Some sanity checks I used during debugging. Just checking that final
@@ -232,17 +230,17 @@ N.count
 Cmodel$N
 
 #check N.recruit count
-N.count <- rep(NA,n.year)
-for(g2 in 1:n.year){
-  N.count[g2] <- sum(Cmodel$z[Cmodel$z.super==1,g2-1]==0&Cmodel$z[Cmodel$z.super==1,g2]==1) 
+N.count <- rep(NA,n.year-1)
+for(g2 in 2:n.year){
+  N.count[g2-1] <- sum(Cmodel$z[Cmodel$z.super==1,g2-1]==0&Cmodel$z[Cmodel$z.super==1,g2]==1) 
 }
 N.count
 Cmodel$N.recruit
 
 #check N.survive count
-N.count <- rep(NA,n.year)
-for(g2 in 1:n.year){
-  N.count[g2] <- sum(Cmodel$z[Cmodel$z.super==1,g2-1]==1&Cmodel$z[Cmodel$z.super==1,g2]==1) 
+N.count <- rep(NA,n.year-1)
+for(g2 in 2:n.year){
+  N.count[g2-1] <- sum(Cmodel$z[Cmodel$z.super==1,g2-1]==1&Cmodel$z[Cmodel$z.super==1,g2]==1) 
 }
 N.count
 Cmodel$N.survive
@@ -250,7 +248,6 @@ Cmodel$N.survive
 #are individual z's consistent with their z.start and z.stop?
 all(apply(Cmodel$z,1,function(x){min(which(x==1))})==Cmodel$z.start)
 all(apply(Cmodel$z,1,function(x){max(which(x==1))})==Cmodel$z.stop)
-
 
 #zombie check
 for(i in 1:M){
