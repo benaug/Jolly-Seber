@@ -14,10 +14,6 @@ source("sim.JS.R")
 source("Nimble Model JS.R")
 source("Nimble Functions JS.R") #contains custom distributions and updates
 
-#make sure to run this line or the MCMC sampler will not work!
-nimble:::setNimbleOption('MCMCjointlySamplePredictiveBranches', FALSE)
-nimbleOptions('MCMCjointlySamplePredictiveBranches') 
-
 n.year <- 4 #number of years
 lambda.y1 <- 200 #expected N in year 1
 gamma <- rep(0.2,n.year-1) #yearly per-capita recruitment

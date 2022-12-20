@@ -44,7 +44,7 @@ sim.JS <- function(lambda.y1=NA,gamma=NA,beta0.phi=NA,beta1.phi=NA,beta2.phi=NA,
   #detection
   y=z*0
   for(g in 1:n.year){
-      y[,g]=rbinom(nrow(z),K[g],p[g]*z[,g])
+    y[,g]=rbinom(nrow(z),K[g],p[g]*z[,g])
   }
   
   #store true data for model buildling/debugging

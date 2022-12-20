@@ -19,10 +19,6 @@ source("Nimble Functions JS-SCR.R") #contains custom distributions and updates
 source("sSampler Fixed.R") # activity center sampler that proposes from prior when z.super=0.
 #this one works for fixed activity centers over years only
 
-#make sure to run this line or the MCMC sampler will not work!
-nimble:::setNimbleOption('MCMCjointlySamplePredictiveBranches', FALSE)
-nimbleOptions('MCMCjointlySamplePredictiveBranches') 
-
 n.year <- 4 #number of years
 lambda.y1 <- 100 #expected N in year 1
 gamma <- rep(0.2,n.year-1) #yearly per-capita recruitment
@@ -124,7 +120,7 @@ for(i in idx){
 }
 
 #constants for Nimble
-constants <- list(n.year=n.year, K=K, M=M, J=J, xlim=xlim, ylim=ylim, K1D=K1D)
+constants <- list(n.year=n.year, M=M, J=J, xlim=xlim, ylim=ylim, K1D=K1D)
 #inits for Nimble
 Niminits <- list(N=N.init,N.survive=N.survive.init,N.recruit=N.recruit.init,
                  ER=N.recruit.init,N.super=N.super.init,z.super=z.super.init,
