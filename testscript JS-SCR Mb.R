@@ -91,9 +91,9 @@ for(i in 1:M){
       if(sum(y.check)>0){
         if(y1[i,g,j]!=1)stop("bug in y1")
         if(y2[i,g,j]!=(sum(y.check)-1))stop("bug in y2")
-        first.cap <- which(y.check==1)[1]
-        if(K1[i,g,j]!=first.cap)stop("bug in K1")
-        if(K2[i,g,j]!=(sum(K3D[g,j,1:K[g]])-first.cap))stop("bug in K2")
+        first.cap.k.on <- which(y.check[K3D[g,j,]==1]==1)[1] #first capture occasion counting only operable occasions
+        if(K1[i,g,j]!=first.cap.k.on)stop("bug in K1")
+        if(K2[i,g,j]!=(sum(K3D[g,j,1:K[g]])-first.cap.k.on))stop("bug in K2")
       }else{
         if(y1[i,g,j]!=0)stop("bug in y1")
         if(y2[i,g,j]!=0)stop("bug in y2")
