@@ -6,7 +6,7 @@ e2dist = function (x, y){
 
 sim.JS.SCR <- function(lambda.y1=NA,gamma=NA,n.year=NA,
                        beta0.phi=NA,beta1.phi=NA,
-                   p0=NA,sigma=NA,X=NA,buff=buff,K=NA){
+                   p0=NA,sigma=NA,X=NA,buff=buff,K=NA,sigma.move=NULL){
   #Population dynamics
   N=rep(NA,n.year)
   N.recruit=N.survive=ER=rep(NA,n.year-1)
@@ -57,11 +57,28 @@ sim.JS.SCR <- function(lambda.y1=NA,gamma=NA,n.year=NA,
   
   #simulate activity centers - fixed through time
   N.super=nrow(z)
-  s<- cbind(runif(N.super, xlim[1],xlim[2]), runif(N.super,ylim[1],ylim[2]))
+  if(!is.null(sigma.move)){
+    print("simulating mobile ACs")
+    s <- array(NA,dim=c(N.super,n.year,2))
+    s[,1,] <- cbind(runif(N.super, xlim[1],xlim[2]), runif(N.super,ylim[1],ylim[2]))
+    for(g in 2:n.year){
+      s[,g,1] <- rnorm(N.super,s[,g-1,1],sd=sigma.move)
+      s[,g,2] <- rnorm(N.super,s[,g-1,2],sd=sigma.move)
+    }
+  }else{
+    print("simulating fixed ACs (provide sigma.move for mobile)")
+    s <- cbind(runif(N.super, xlim[1],xlim[2]), runif(N.super,ylim[1],ylim[2]))
+  }
+  
+  
   pd <- y <- array(0,dim=c(N.super,n.year,J.max))
   
   for(g in 1:n.year){
-    D<- e2dist(s,X[[g]])
+    if(!is.null(sigma.move)){
+      D<- e2dist(s[,g,],X[[g]])
+    }else{
+      D<- e2dist(s,X[[g]])
+    }
     pd[,g,1:J[g]]<- p0[g]*exp(-D*D/(2*sigma[g]*sigma[g]))
     for(i in 1:N.super){
       if(z[i,g]==1){
