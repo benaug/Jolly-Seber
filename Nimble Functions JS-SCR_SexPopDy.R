@@ -168,8 +168,8 @@ zSampler <- nimbleFunction(
           #must account for sex-specificity, Updating N changes both ER.M and ER.F
           model$calculate(ER.M.nodes)
           model$calculate(ER.F.nodes)
-          recruit.probs.M <- c(model$lambda.y1.M,model$ER.M) #first year thinned Poisson, p.sex is prob female
-          recruit.probs.F <- c(model$lambda.y1.F,model$ER.F) #first year thinned Poisson, p.sex is prob female
+          recruit.probs.M <- c(model$lambda.y1.M,model$ER.M)
+          recruit.probs.F <- c(model$lambda.y1.F,model$ER.F)
           recruit.probs.M <- recruit.probs.M/sum(recruit.probs.M)
           recruit.probs.F <- recruit.probs.F/sum(recruit.probs.F)
           lp.recruit <- 0
@@ -329,8 +329,8 @@ zSampler <- nimbleFunction(
           #must account for sex-specificity, Updating N changes both ER.M and ER.F
           model$calculate(ER.M.nodes)
           model$calculate(ER.F.nodes)
-          recruit.probs.M <- c(model$lambda.y1.M,model$ER.M) #first year thinned Poisson, p.sex is prob female
-          recruit.probs.F <- c(model$lambda.y1.F,model$ER.F) #first year thinned Poisson, p.sex is prob female
+          recruit.probs.M <- c(model$lambda.y1.M,model$ER.M)
+          recruit.probs.F <- c(model$lambda.y1.F,model$ER.F)
           recruit.probs.M <- recruit.probs.M/sum(recruit.probs.M)
           recruit.probs.F <- recruit.probs.F/sum(recruit.probs.F)
           lp.recruit <- 0
