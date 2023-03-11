@@ -22,7 +22,7 @@ source("sSampler Fixed.R") # activity center sampler that proposes from prior wh
 
 n.year <- 4 #number of years
 lambda.y1.M <- 75 #expected male N in year 1
-lambda.y1.F <- 125 #expected male N in year 1
+lambda.y1.F <- 125 #expected female N in year 1
 #yearly per-capita recruitment
 gamma.sex <- c(0.15,0.1) #male, then female, fixed across years
 #sex-specific survival
@@ -36,7 +36,7 @@ K <- rep(10,n.year) #yearly sampling occasions
 #probability we observe sex for detected individuals (not a function of number of capture events)
 #ASSUMPTION: sex observations are missing at random (same prob of observing male and female)
 #model likely won't work well without most sexes observed
-p.obs.sex <- 0.85
+p.obs.sex <- 1
 
 buff <- 2.5 #state space buffer. Buffers maximal x and y dimensions of X below across years
 X <- vector("list",n.year) #one trapping array per year
