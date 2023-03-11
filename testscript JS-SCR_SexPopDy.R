@@ -5,9 +5,10 @@
 #1) Dimensions probably prevent this from working with only 2 years of data (N.recruit, N.survive are not vectors)
 #Need to modify custom updates in this case
 #2) Object names that cannot be changed in the nimble model without changes in custom updates:
-#N, N.recruit, N.survive, ER, lambda.y1, z.start, z.stop, z.obs, pd
+#N, N.recruit, N.survive, ER (male and female counterparts for all these, too),
+# lambda.y1.M, lambda.y1.F, z.start, z.stop, z.obs, pd
 #phi[i,g] (must be of dimension M x n.year),
-#Poisson assumptions on N[1] and N.recruit (but can include overdispersion with random effects)
+#Poisson assumptions on N.M[1], N.F[1] and N.recruit.M/N.recruit.F (but can include overdispersion with random effects)
 #y can change dimension (e.g., for SCR), but need to account for that in defining "y.nodes"
 #below to add custom updates. I think that is all...
 
