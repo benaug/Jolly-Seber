@@ -37,10 +37,6 @@ sim.JS <- function(lambda.y1=NA,gamma=NA,beta0.phi=NA,beta1.phi=NA,beta2.phi=NA,
   #plot to see if sim values realistic
   hist(phi,main="Distribution of Individual Phi")
   
-  birth.year=apply(z,1,function(x){match(1,x)})
-  death.year=10-apply(z,1,function(x){match(1,rev(x))})+1
-  lifetimes=death.year-birth.year
-  
   #detection
   y=z*0
   for(g in 1:n.year){

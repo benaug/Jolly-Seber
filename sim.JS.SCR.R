@@ -44,10 +44,6 @@ sim.JS.SCR <- function(lambda.y1=NA,gamma=NA,n.year=NA,
   #plot to see if sim values realistic
   hist(phi,main="Distribution of Individual Phi")
   
-  birth.year=apply(z,1,function(x){match(1,x)})
-  death.year=10-apply(z,1,function(x){match(1,rev(x))})+1
-  lifetimes=death.year-birth.year
-  
   #detection
   #get maximal x and y extent across yearly grids plus buffer
   xlim = c(max(unlist(lapply(X,function(x){min(x[,1])}))),max(unlist(lapply(X,function(x){max(x[,1])})))) + c(-buff,buff)

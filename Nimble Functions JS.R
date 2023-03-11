@@ -309,6 +309,8 @@ zSampler <- nimbleFunction(
         log_MH_ratio <- (lp.proposed.total + log.prop.back) - (lp.initial.total + log.prop.for)
         accept <- decide(log_MH_ratio)
         if(accept) {
+          model$calculate(N.nodes[1])
+          model$calculate(N.recruit.nodes)
           mvSaved["z.start",1][i] <<- model[["z.start"]][i]
           mvSaved["z.stop",1][i] <<- model[["z.stop"]][i]
           mvSaved["z",1][i,] <<- model[["z"]][i,]
