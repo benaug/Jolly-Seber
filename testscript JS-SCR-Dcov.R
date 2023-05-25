@@ -21,6 +21,7 @@ source("sim.JS.SCR.Dcov.R")
 source("Nimble Model JS-SCR-Dcov.R")
 source("Nimble Functions JS-SCR-Dcov.R") #contains custom distributions and updates
 source("sSampler Dcov.R") # activity center sampler that proposes from prior when z.super=0.
+source("mask.check.R")
 
 n.year <- 4 #number of years
 gamma <- rep(0.2,n.year-1) #yearly per-capita recruitment
@@ -116,6 +117,12 @@ image(x.vals,y.vals,matrix(lambda.cell,n.cells.x,n.cells.y),main="Expected Densi
 points(X.all,pch=4,cex=0.75)
 points(data$truth$s,pch=16)
 
+#function to test for errors in mask set up. 
+mask.check(dSS=data$dSS,cells=data$cells,n.cells=data$n.cells,n.cells.x=data$n.cells.x,
+           n.cells.y=data$n.cells.y,res=data$res,xlim=data$xlim,ylim=data$ylim,
+           x.vals=data$x.vals,y.vals=data$y.vals)
+
+
 ##Initialize##
 M <- 200 #data augmentation level. Check N.super posterior to make sure it never hits M
 N.super.init <- nrow(data$y)
@@ -196,6 +203,26 @@ for(i in idx){
   }
 }
 
+#If using a habitat mask, move any s's initialized in non-habitat above to closest habitat
+e2dist  <-  function (x, y){
+  i <- sort(rep(1:nrow(y), nrow(x)))
+  dvec <- sqrt((x[, 1] - y[i, 1])^2 + (x[, 2] - y[i, 2])^2)
+  matrix(dvec, nrow = nrow(x), ncol = nrow(y), byrow = F)
+}
+getCell  <-  function(s,res,cells){
+  cells[trunc(s[1]/res)+1,trunc(s[2]/res)+1]
+}
+alldists <- e2dist(s.init,data$dSS)
+alldists[,data$InHabitat==0] <- Inf
+for(i in 1:M){
+  this.cell <- data$cells[trunc(s.init[i,1]/data$res)+1,trunc(s.init[i,2]/data$res)+1]
+  if(data$InHabitat[this.cell]==0){
+    cands <- alldists[i,]
+    new.cell <- which(alldists[i,]==min(alldists[i,]))
+    s.init[i,] <- data$dSS[new.cell,]
+  }
+}
+
 #constants for Nimble
 #might want to center D.cov here. Simulated D.cov in this testscript is already effectively centered.
 constants <- list(n.year=n.year, M=M, J=J, xlim=xlim, ylim=ylim, K1D=K1D,
@@ -268,7 +295,6 @@ for(i in 1:M){
 
 
 #optional (but recommended!) blocking 
-#do i need this in this model? probably
 conf$removeSampler(c("beta0.phi"))
 conf$removeSampler(c("beta1.phi"))
 conf$addSampler(target = c("beta0.phi","beta1.phi"),type = 'RW_block',
@@ -282,7 +308,7 @@ Cmcmc <- compileNimble(Rmcmc, project = Rmodel)
 
 # Run the model.
 start.time2 <- Sys.time()
-Cmcmc$run(5000,reset=FALSE) #can extend run by rerunning this line
+Cmcmc$run(2500,reset=FALSE) #can extend run by rerunning this line
 end.time <- Sys.time()
 time1 <- end.time-start.time  # total time for compilation, replacing samplers, and fitting
 time2 <- end.time-start.time2 # post-compilation run time
