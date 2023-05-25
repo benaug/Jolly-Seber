@@ -47,8 +47,13 @@ sSamplerDcov <- nimbleFunction(
       #propose new cell
       model$s.cell[i] <<- rcat(1,model$pi.cell)
       #propose x and y in new cell
-      s.cell.x <- model$s.cell[i]%%n.cells.y
+      s.cell.x <- model$s.cell[i]%%n.cells.x
       s.cell.y <- floor(model$s.cell[i]/n.cells.x)+1
+      s.cell.y <- floor(model$s.cell[i]/n.cells.x)+1
+      if(s.cell.x==0){
+        s.cell.x=n.cells.x
+        s.cell.y=s.cell.y-1
+      }
       xlim.cell=c(s.cell.x-1,s.cell.x)*res
       ylim.cell=c(s.cell.y-1,s.cell.y)*res
       model$s[i, 1:2] <<- c(runif(1, xlim.cell[1], xlim.cell[2]), runif(1, ylim.cell[1], ylim.cell[2]))
