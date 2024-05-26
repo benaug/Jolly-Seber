@@ -23,6 +23,11 @@ source("Nimble Functions JS-SCR-Dcov.R") #contains custom distributions and upda
 source("sSampler Dcov.R") # activity center sampler that proposes from prior when z.super=0.
 source("mask.check.R")
 
+#If using Nimble version 0.13.1 and you must run this line 
+nimbleOptions(determinePredictiveNodesInModel = FALSE)
+# #If using Nimble before version 0.13.1, run this line instead
+# nimble:::setNimbleOption('MCMCjointlySamplePredictiveBranches', FALSE)
+
 n.year <- 4 #number of years
 gamma <- rep(0.2,n.year-1) #yearly per-capita recruitment
 beta0.phi <- qlogis(0.85) #survival intercept
