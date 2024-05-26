@@ -1,11 +1,12 @@
 NimModel <- nimbleCode({
-  ##Density model##
-  D.beta0 ~ dnorm(0,sd=10)
+  #Density covariates
+  D0 ~ dunif(0,100) #uninformative, diffuse dnorm on log scale can cause neg bias
+  # D.beta0 ~ dnorm(0,sd=10)
   D.beta1 ~ dnorm(0,sd=10)
-  D.intercept <- exp(D.beta0)*cellArea
-  
+  # D.intercept <- exp(D.beta0)*cellArea
+  D.intercept <- D0*cellArea
   for(c in 1:n.cells) {
-    lambda.cell[c] <- InHabitat[c]*exp(D.beta1*D.cov[c]) #separate this component so s's do not depend on D.intercept
+    lambda.cell[c] <- InSS[c]*exp(D.beta1*D.cov[c]) #separate this component so s's do not depend on D.intercept
     lambda.y1.cell[1,c] <- D.intercept*lambda.cell[c] #expected N in cell c
     pi.cell[c] <- lambda.cell[c] / pi.denom #expected proportion of total N in cell c
   }
@@ -37,7 +38,7 @@ NimModel <- nimbleCode({
     s[i,2] ~ dunif(ylim[1],ylim[2])
     #get cell s_i lives in using look-up table
     s.cell[i] <- cells[trunc(s[i,1]/res)+1,trunc(s[i,2]/res)+1]
-    dummy.data[i] ~ dCell(pi.cell[s.cell[i]],InHabitat[s.cell[i]]) #categorical likelihood for this cell, equivalent to zero's trick
+    dummy.data[i] ~ dCell(pi.cell[s.cell[i]],InSS[s.cell[i]]) #categorical likelihood for this cell, equivalent to zero's trick
   }
   
   #Survival (phi must have M x n.year - 1 dimension for custom updates to work)

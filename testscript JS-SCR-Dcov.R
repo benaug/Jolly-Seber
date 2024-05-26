@@ -92,13 +92,13 @@ points(X.all,pch=4,cex=0.75,col="lightblue")
 #Additionally, maybe we want to exclude "non-habitat"
 #just removing the corners here for simplicity
 dSS.tmp <- dSS - res/2 #convert back to grid locs
-InHabitat=rep(1,length(D.cov))
-InHabitat[dSS.tmp[,1]<2&dSS.tmp[,2]<2] <- 0
-InHabitat[dSS.tmp[,1]<2&dSS.tmp[,2]>12] <- 0
-InHabitat[dSS.tmp[,1]>12&dSS.tmp[,2]<2] <- 0
-InHabitat[dSS.tmp[,1]>12&dSS.tmp[,2]>12] <- 0
+InSS <- rep(1,length(D.cov))
+InSS[dSS.tmp[,1]<2&dSS.tmp[,2]<2] <- 0
+InSS[dSS.tmp[,1]<2&dSS.tmp[,2]>12] <- 0
+InSS[dSS.tmp[,1]>12&dSS.tmp[,2]<2] <- 0
+InSS[dSS.tmp[,1]>12&dSS.tmp[,2]>12] <- 0
 
-image(x.vals,y.vals,matrix(InHabitat,n.cells.x,n.cells.y),main="Habitat")
+image(x.vals,y.vals,matrix(InSS,n.cells.x,n.cells.y),main="Habitat")
 
 #Density covariates
 D.beta0 <- -2
@@ -108,7 +108,7 @@ lambda.cell <- exp(D.beta0 + D.beta1*D.cov)*cellArea
 sum(lambda.cell) #expected N in state space
 
 #simulate some data
-data <- sim.JS.SCR.Dcov(D.beta0=D.beta0,D.beta1=D.beta1,D.cov=D.cov,InHabitat=InHabitat,
+data <- sim.JS.SCR.Dcov(D.beta0=D.beta0,D.beta1=D.beta1,D.cov=D.cov,InSS=InSS,
             gamma=gamma,n.year=n.year,beta0.phi=beta0.phi,beta1.phi=beta1.phi,
             p0=p0,sigma=sigma,X=X,K=K,xlim=xlim,ylim=ylim,res=res)
 
@@ -124,7 +124,7 @@ mask.check(dSS=data$dSS,cells=data$cells,n.cells=data$n.cells,n.cells.x=data$n.c
 
 
 ##Initialize##
-M <- 200 #data augmentation level. Check N.super posterior to make sure it never hits M
+M <- 300 #data augmentation level. Check N.super posterior to make sure it never hits M
 N.super.init <- nrow(data$y)
 X <- data$X #pull X from data (won't be in environment if not simulated directly above)
 if(N.super.init > M) stop("Must augment more than number of individuals captured")
@@ -213,10 +213,10 @@ getCell  <-  function(s,res,cells){
   cells[trunc(s[1]/res)+1,trunc(s[2]/res)+1]
 }
 alldists <- e2dist(s.init,data$dSS)
-alldists[,data$InHabitat==0] <- Inf
+alldists[,data$InSS==0] <- Inf
 for(i in 1:M){
   this.cell <- data$cells[trunc(s.init[i,1]/data$res)+1,trunc(s.init[i,2]/data$res)+1]
-  if(data$InHabitat[this.cell]==0){
+  if(data$InSS[this.cell]==0){
     cands <- alldists[i,]
     new.cell <- which(alldists[i,]==min(alldists[i,]))
     s.init[i,] <- data$dSS[new.cell,]
@@ -231,17 +231,17 @@ constants <- list(n.year=n.year, M=M, J=J, xlim=xlim, ylim=ylim, K1D=K1D,
 #inits for Nimble
 Niminits <- list(N=N.init,N.survive=N.survive.init,N.recruit=N.recruit.init,
                  ER=N.recruit.init,N.super=N.super.init,z.super=z.super.init,
-                 s=s.init,beta0.phi=0,beta1.phi=0,D.beta0=0,D.beta1=0)
+                 s=s.init,beta0.phi=0,beta1.phi=0,D0=N.init[1]/(sum(InSS)*res^2),D.beta1=0)
 
 #data for Nimble
 dummy.data <- rep(0,M) #dummy data not used, doesn't really matter what the values are
 Nimdata <- list(y=y.nim,z=z.init,z.start=z.start.init,z.stop=z.stop.init,phi.cov=phi.cov.data,X=X.nim,
-                dummy.data=dummy.data,cells=cells,InHabitat=data$InHabitat)
+                dummy.data=dummy.data,cells=cells,InSS=data$InSS)
 
 # set parameters to monitor
 parameters <- c('N','gamma','N.recruit','N.survive','N.super','lambda.y1',
                 'beta0.phi','beta1.phi','phi.cov.mu','phi.cov.sd','p0','sigma',
-                'D.beta0','D.beta1')
+                'D0','D.beta1')
 nt <- 1 #thinning rate
 
 # Build the model, configure the mcmc, and compile
@@ -255,7 +255,7 @@ Rmodel <- nimbleModel(code=NimModel, constants=constants, data=Nimdata,check=FAL
 #we have to tell nimble which nodes to assign samplers for for the individual covariate when manually
 #instructing nimble which samplers to assign.
 config.nodes <- c('beta0.phi','beta1.phi','gamma',paste('phi.cov[',cov.up,']'),
-               'phi.cov.mu','phi.cov.sd','p0','sigma','D.beta0','D.beta1')
+               'phi.cov.mu','phi.cov.sd','p0','sigma','D0','D.beta1')
 conf <- configureMCMC(Rmodel,monitors=parameters, thin=nt,
                       nodes=config.nodes,useConjugacy = FALSE)
 
@@ -299,6 +299,8 @@ conf$removeSampler(c("beta0.phi"))
 conf$removeSampler(c("beta1.phi"))
 conf$addSampler(target = c("beta0.phi","beta1.phi"),type = 'RW_block',
                 control = list(adaptive=TRUE),silent = TRUE)
+conf$addSampler(target = c("D0","D.beta1"),
+                type = 'RW_block',control=list(adaptive=TRUE),silent = TRUE)
 
 # Build and compile
 Rmcmc <- buildMCMC(conf)
@@ -314,7 +316,7 @@ time1 <- end.time-start.time  # total time for compilation, replacing samplers, 
 time2 <- end.time-start.time2 # post-compilation run time
 
 mvSamples <-  as.matrix(Cmcmc$mvSamples)
-plot(mcmc(mvSamples[-c(1:10),]))
+plot(mcmc(mvSamples[-c(1:500),]))
 
 #reminder what the targets are
 data$N

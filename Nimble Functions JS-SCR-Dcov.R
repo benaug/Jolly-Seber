@@ -1,8 +1,8 @@
 dCell <- nimbleFunction(
-  run = function(x = double(0), pi.cell = double(0), InHabitat = double(0),
+  run = function(x = double(0), pi.cell = double(0), InSS = double(0),
                  log = integer(0)) {
     returnType(double(0))
-    if(InHabitat==1){
+    if(InSS==1){
       logProb <- log(pi.cell)
     }else{
       logProb <- -Inf
@@ -13,7 +13,7 @@ dCell <- nimbleFunction(
 
 #make dummy random number generator to make nimble happy
 rCell <- nimbleFunction(
-  run = function(n = integer(0),pi.cell = double(0), InHabitat = double(0)) {
+  run = function(n = integer(0),pi.cell = double(0), InSS = double(0)) {
     returnType(double(0))
     return(0)
   }

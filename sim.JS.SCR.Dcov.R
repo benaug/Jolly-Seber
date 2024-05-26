@@ -4,7 +4,7 @@ e2dist = function (x, y){
   matrix(dvec, nrow = nrow(x), ncol = nrow(y), byrow = F)
 }
 
-sim.JS.SCR.Dcov <- function(D.beta0=NA,D.beta1=NA,D.cov=NA,InHabitat=NA,
+sim.JS.SCR.Dcov <- function(D.beta0=NA,D.beta1=NA,D.cov=NA,InSS=NA,
                             gamma=NA,n.year=NA,beta0.phi=NA,beta1.phi=NA,
                    p0=NA,sigma=NA,X=NA,buff=buff,K=NA,xlim=NA,ylim=NA,res=NA){
   #Population dynamics
@@ -69,7 +69,7 @@ sim.JS.SCR.Dcov <- function(D.beta0=NA,D.beta1=NA,D.cov=NA,InHabitat=NA,
   # simulate a population of activity centers
   pi.cell=lambda.cell/sum(lambda.cell)
   #zero out non-habitat
-  pi.cell[InHabitat==0]=0
+  pi.cell[InSS==0]=0
   s.cell=sample(1:n.cells,N.super,prob=pi.cell,replace=TRUE)
   #distribute activity centers uniformly inside cells
   s=matrix(NA,nrow=N.super,ncol=2)
@@ -100,6 +100,6 @@ sim.JS.SCR.Dcov <- function(D.beta0=NA,D.beta1=NA,D.cov=NA,InHabitat=NA,
   return(list(y=y,cov=cov,N=N,N.recruit=N.recruit,N.survive=N.survive,X=X,K=K,
               xlim=xlim,ylim=ylim,x.vals=x.vals,y.vals=y.vals,dSS=dSS,cells=cells,
               n.cells=n.cells,n.cells.x=n.cells.x,n.cells.y=n.cells.y,s.cell=s.cell,
-              D.cov=D.cov,InHabitat=InHabitat,res=res,cellArea=cellArea,N=N,lambda.y1=lambda.y1,
+              D.cov=D.cov,InSS=InSS,res=res,cellArea=cellArea,N=N,lambda.y1=lambda.y1,
               truth=truth))
 }
