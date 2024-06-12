@@ -31,14 +31,14 @@ data <- sim.JS(lambda.y1=lambda.y1,gamma=gamma,
 M <- 400 #data augmentation level. Check N.super posterior to make sure it never hits M
 N.super.init <- nrow(data$y)
 if(N.super.init > M) stop("Must augment more than number of individuals captured")
-y.init <- matrix(0,M,n.year)
-y.init[1:N.super.init,] <- data$y #all these guys must be observed
+y.nim <- matrix(0,M,n.year)
+y.nim[1:N.super.init,] <- data$y #all these guys must be observed
 #initialize z, start with observed guys
-z.init <- 1*(y.init>0)
+z.init <- 1*(y.nim>0)
 z.init <- matrix(0,M,n.year)
 z.start.init <- z.stop.init <- rep(NA,M)
 for(i in 1:N.super.init){
-  det.idx <- which(y.init[i,]>0)
+  det.idx <- which(y.nim[i,]>0)
   if(length(det.idx)>0){ #some all 0 histories if init from truth
     z.start.init[i] <- min(det.idx)
     z.stop.init[i] <- max(det.idx)
@@ -58,7 +58,7 @@ for(i in (N.super.init+1):M){
   z.stop.init[i] <- stop
 }
 z.super.init <- c(rep(1,N.super.init),rep(0,M-N.super.init))
-z.obs <- 1*(rowSums(y.init)>0) #indicator for "ever observed"
+z.obs <- 1*(rowSums(y.nim)>0) #indicator for "ever observed"
 
 #initialize N structures from z.init
 N.init <- colSums(z.init[z.super.init==1,])
@@ -75,11 +75,12 @@ cov.up <- which(is.na(phi.cov.data)) #which individuals have missing cov values,
 constants <- list(n.year=n.year, K=K, M=M)
 #inits for Nimble
 Niminits <- list(N=N.init,N.survive=N.survive.init,N.recruit=N.recruit.init,
-                 ER=N.recruit.init,N.super=N.super.init,z.super=z.super.init,
+                 ER=N.recruit.init,N.super=N.super.init,
+                 z=z.init,z.start=z.start.init,z.stop=z.stop.init,z.super=z.super.init,
                  beta0.phi=0,beta1.phi=0)
 
 #data for Nimble
-Nimdata <- list(y=y.init,z=z.init,z.start=z.start.init,z.stop=z.stop.init,phi.cov=phi.cov.data)
+Nimdata <- list(y=y.nim,phi.cov=phi.cov.data)
 
 # set parameters to monitor
 parameters <- c('N','gamma','N.recruit','N.survive','p','beta0.phi',

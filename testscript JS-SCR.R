@@ -124,10 +124,11 @@ constants <- list(n.year=n.year, M=M, J=J, xlim=xlim, ylim=ylim, K1D=K1D)
 #inits for Nimble
 Niminits <- list(N=N.init,N.survive=N.survive.init,N.recruit=N.recruit.init,
                  ER=N.recruit.init,N.super=N.super.init,z.super=z.super.init,
+                 z=z.init,z.start=z.start.init,z.stop=z.stop.init,
                  s=s.init,beta0.phi=0,beta1.phi=0)
 
 #data for Nimble
-Nimdata <- list(y=y.nim,z=z.init,z.start=z.start.init,z.stop=z.stop.init,phi.cov=phi.cov.data,X=X.nim)
+Nimdata <- list(y=y.nim,phi.cov=phi.cov.data,X=X.nim)
 
 # set parameters to monitor
 parameters <- c('N','gamma','N.recruit','N.survive','N.super',
