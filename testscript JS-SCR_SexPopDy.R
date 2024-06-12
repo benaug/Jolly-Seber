@@ -148,7 +148,7 @@ Niminits <- list(N=N.init,N.survive=N.survive.init,N.recruit=N.recruit.init,
                  N.F=N.F.init,N.survive.F=N.survive.F.init,N.recruit.F=N.recruit.F.init,
                  ER.M=N.recruit.M.init,ER.F=N.recruit.F.init,
                  N.super=N.super.init,z.super=z.super.init,
-                 z=z.init,z.start=z.start.init,z.stop=z.stop.init
+                 z=z.init,z.start=z.start.init,z.stop=z.stop.init,
                  s=s.init,sex=sex.init)
 
 #data for Nimble
