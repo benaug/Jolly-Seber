@@ -14,7 +14,7 @@ source("sim.JS.R")
 source("Nimble Model JS.R")
 source("Nimble Functions JS.R") #contains custom distributions and updates
 
-n.year <- 4 #number of years
+n.year <- 20 #number of years
 lambda.y1 <- 200 #expected N in year 1
 gamma <- rep(0.2,n.year-1) #yearly per-capita recruitment
 beta0.phi <- qlogis(0.85) #survival intercept
@@ -75,7 +75,7 @@ cov.up <- which(is.na(phi.cov.data)) #which individuals have missing cov values,
 constants <- list(n.year=n.year, K=K, M=M)
 #inits for Nimble
 Niminits <- list(N=N.init,N.survive=N.survive.init,N.recruit=N.recruit.init,
-                 ER=N.recruit.init,N.super=N.super.init,
+                 ER=N.recruit.init,N.super=N.super.init,lambda.y1=N.init[1],
                  z=z.init,z.start=z.start.init,z.stop=z.stop.init,z.super=z.super.init,
                  beta0.phi=0,beta1.phi=0)
 
@@ -139,13 +139,13 @@ Cmcmc <- compileNimble(Rmcmc, project = Rmodel)
 
 # Run the model.
 start.time2 <- Sys.time()
-Cmcmc$run(5000,reset=FALSE) #can extend run by rerunning this line
+Cmcmc$run(250,reset=FALSE) #can extend run by rerunning this line
 end.time <- Sys.time()
 time1 <- end.time-start.time  # total time for compilation, replacing samplers, and fitting
 time2 <- end.time-start.time2 # post-compilation run time
 
 mvSamples <-  as.matrix(Cmcmc$mvSamples)
-plot(mcmc(mvSamples[-c(1:1000),]))
+plot(mcmc(mvSamples[-c(1:850),]))
 
 #reminder what the targets are
 data$N
@@ -154,7 +154,7 @@ data$N.survive
 data$N[1]+sum(data$N.recruit) #N.super
 
 
-
+#500 iters in 20 min
 
 #Some sanity checks I used during debugging. Just checking that final
 #model states match between z and N objects

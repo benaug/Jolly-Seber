@@ -1,6 +1,6 @@
 NimModel <- nimbleCode({
   ##Abundance##
-  lambda.y1 ~ dunif(0,1000) #Expected starting population size
+  lambda.y1 ~ dunif(0,4000) #Expected starting population size
   N[1] ~ dpois(lambda.y1) #Realized starting population size
   for(g in 2:n.year){
     N[g] <- N.survive[g-1] + N.recruit[g-1] #yearly abundance
