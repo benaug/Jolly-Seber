@@ -38,10 +38,10 @@ NimModel <- nimbleCode({
   ##Detection##
   for(g in 1:n.year){
     p[g] ~ dunif(0,1)
-  }
-  for(i in 1:M){
-    #block yearly p updates for greater efficiency due to vector node here
-    y[i,1:n.year] ~ dBinomialVector(p=p[1:n.year]*z[i,1:n.year],K=K[1:n.year],z.super=z.super[i])
+    for(i in 1:M){
+      #must use this custom distribution for custom updates
+      y[i,g] ~ dbinomial2(p=p[g],K=K[g],z=z[i,g],z.super=z.super[i])
+    }
   }
 })
 

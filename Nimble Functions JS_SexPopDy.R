@@ -29,6 +29,7 @@ rSurvival <- nimbleFunction(
   }
 )
 
+#custom observation model distribution that makes custom updates easier
 dbinomial2 <- nimbleFunction(
   run = function(x = double(0), p = double(0), K = double(0), z = double(0), z.super = double(0),
                  log = integer(0)) {

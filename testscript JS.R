@@ -14,7 +14,7 @@ source("sim.JS.R")
 source("Nimble Model JS.R")
 source("Nimble Functions JS.R") #contains custom distributions and updates
 
-n.year <- 20 #number of years
+n.year <- 4 #number of years
 lambda.y1 <- 200 #expected N in year 1
 gamma <- rep(0.2,n.year-1) #yearly per-capita recruitment
 beta0.phi <- qlogis(0.85) #survival intercept
@@ -28,7 +28,7 @@ data <- sim.JS(lambda.y1=lambda.y1,gamma=gamma,
 
 
 ##Initialize##
-M <- 400 #data augmentation level. Check N.super posterior to make sure it never hits M
+M <- 500 #data augmentation level. Check N.super posterior to make sure it never hits M
 N.super.init <- nrow(data$y)
 if(N.super.init > M) stop("Must augment more than number of individuals captured")
 y.nim <- matrix(0,M,n.year)
@@ -105,7 +105,7 @@ conf <- configureMCMC(Rmodel,monitors=parameters, thin=nt,
 ###*required* sampler replacement###
 z.super.ups <- round(M*0.2) #how many z.super update proposals per iteration? 
 #20% of M seems reasonable, but optimal will depend on data set
-y.nodes <- Rmodel$expandNodeNames(paste0("y[1:",M,",1]")) #if you change y structure, change here
+y.nodes <- c(Rmodel$expandNodeNames(paste0("y[1:",M,",1:",n.year,"]")) ) #if you change y structure, change here
 N.nodes <- Rmodel$expandNodeNames(paste0("N"))
 N.survive.nodes <- Rmodel$expandNodeNames(paste0("N.survive[1:",n.year-1,"]"))
 N.recruit.nodes <- Rmodel$expandNodeNames(paste0("N.recruit[1:",n.year-1,"]"))
@@ -125,11 +125,6 @@ conf$removeSampler(c("beta0.phi"))
 conf$removeSampler(c("beta1.phi"))
 conf$addSampler(target = c("beta0.phi","beta1.phi"),type = 'RW_block',
                 control = list(adaptive=TRUE),silent = TRUE)
-#blocking p should increase efficiency because with the y node vectorized over years, you must evaluate
-#all year's detections to update 1 year's p. So blocking replaces n.year likelihood evaluations with 1.
-conf$removeSampler(c("p"))
-conf$addSampler(target = c("p"),type = 'RW_block',
-                control = list(adaptive=TRUE),silent = TRUE)
 
 # Build and compile
 Rmcmc <- buildMCMC(conf)
@@ -139,13 +134,13 @@ Cmcmc <- compileNimble(Rmcmc, project = Rmodel)
 
 # Run the model.
 start.time2 <- Sys.time()
-Cmcmc$run(250,reset=FALSE) #can extend run by rerunning this line
+Cmcmc$run(2500,reset=FALSE) #can extend run by rerunning this line
 end.time <- Sys.time()
 time1 <- end.time-start.time  # total time for compilation, replacing samplers, and fitting
 time2 <- end.time-start.time2 # post-compilation run time
 
 mvSamples <-  as.matrix(Cmcmc$mvSamples)
-plot(mcmc(mvSamples[-c(1:850),]))
+plot(mcmc(mvSamples[-c(1:50),]))
 
 #reminder what the targets are
 data$N

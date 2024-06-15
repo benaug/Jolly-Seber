@@ -41,7 +41,7 @@ data <- sim.JS.SexPopDy(lambda.y1.M=lambda.y1.M,lambda.y1.F=lambda.y1.F,
                         p.sex=p.sex,K=K,p.obs.sex=p.obs.sex)
 
 ##Initialize##
-M <- 500 #data augmentation level.
+M <- 600 #data augmentation level.
 # IMPORTANT: Check N.super posterior to make sure it never hits M. Otherwise, estimates will be biased.
 N.super.init <- nrow(data$y)
 if(N.super.init > M) stop("Must augment more than number of individuals captured")
@@ -140,11 +140,7 @@ conf <- configureMCMC(Rmodel,monitors=parameters, thin=nt,monitors2=parameters2,
 ###*required* sampler replacements###
 z.super.ups <- round(M*0.2) #how many z.super update proposals per iteration?
 #20% of M seems reasonable, but optimal will depend on data set
-#loop here bc potentially different numbers of traps to vectorize in each year
-y.nodes <- c()
-for(g in 1:n.year){
-  y.nodes <- c(y.nodes,Rmodel$expandNodeNames(paste0("y[1:",M,",",g,"]"))) #if you change y structure, change here
-}
+y.nodes <- c(Rmodel$expandNodeNames(paste0("y[1:",M,",1:",n.year,"]")) )
 N.nodes <- Rmodel$expandNodeNames(paste0("N"))
 N.M.nodes <- Rmodel$expandNodeNames(paste0("N.M"))
 N.F.nodes <- Rmodel$expandNodeNames(paste0("N.F"))
