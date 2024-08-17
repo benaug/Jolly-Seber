@@ -174,12 +174,13 @@ Rmodel <- nimbleModel(code=NimModel, constants=constants, data=Nimdata,check=FAL
 #N.recruit. If you change the model parameters, you will need to make the same changes here. Finally,
 #we have to tell nimble which nodes to assign samplers for for the individual covariate when manually
 #instructing nimble which samplers to assign.
-config.nodes <- c('phi.sex','gamma.male','gamma.female','lambda.y1.M', #took sex out, put back in or make custom update
+config.nodes <- c('phi.sex','gamma.male','gamma.female','lambda.y1.M', #sex not included here, in custom N/z update
                'lambda.y1.F','p0.sex','sigma.sex')
 conf <- configureMCMC(Rmodel,monitors=parameters, thin=nt,monitors2=parameters2,
                       nodes=config.nodes,useConjugacy = TRUE)
 
 ###*required* sampler replacements###
+#N/z updates + sex updates for guys detected without observed sex
 z.super.ups <- round(M*0.2) #how many z.super update proposals per iteration?
 #20% of M seems reasonable, but optimal will depend on data set
 #loop here bc potentially different numbers of traps to vectorize in each year
@@ -206,7 +207,7 @@ calcNodes <- c(N.nodes,N.recruit.nodes,
                N.M.nodes,N.recruit.M.nodes,
                N.F.nodes,N.recruit.F.nodes,
                N.survive.nodes,N.survive.M.nodes,N.survive.F.nodes,
-               y.nodes,z.nodes,phi.nodes=phi.nodes) #the ones that need likelihoods updated in mvSaved
+               y.nodes,z.nodes,phi.nodes) #the ones that need likelihoods updated in mvSaved
 conf$addSampler(target = c("z"),
                 type = 'zSampler',control = list(M=M,n.year=n.year,J=J,
                                                  z.obs=z.obs,z.super.ups=z.super.ups,
@@ -244,7 +245,7 @@ time1 <- end.time-start.time  # total time for compilation, replacing samplers, 
 time2 <- end.time-start.time2 # post-compilation run time
 
 mvSamples <-  as.matrix(Cmcmc$mvSamples)
-plot(mcmc(mvSamples[-c(1:500),]))
+plot(mcmc(mvSamples[-c(1:1000),]))
 
 #reminder what the targets are
 data$N

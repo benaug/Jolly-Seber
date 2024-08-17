@@ -71,7 +71,7 @@ rBinomialVector <- nimbleFunction(
 #some concern while statements could create infinite loop,
 #but should be fine as long as all s's intialized inside 
 #state space
-rTruncNorm<- nimbleFunction(
+rTruncNorm <- nimbleFunction(
   run = function(n = integer(0), xlim = double(1), ylim = double(1),s.prev = double(1),
                  sigma.move = double(0)) {
     if(n!=1)print("rTruncNorm only accepts n=1")

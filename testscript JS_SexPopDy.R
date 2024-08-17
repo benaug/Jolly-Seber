@@ -159,7 +159,7 @@ calcNodes <- c(N.nodes,N.recruit.nodes,
                N.M.nodes,N.recruit.M.nodes,
                N.F.nodes,N.recruit.F.nodes,
                N.survive.nodes,N.survive.M.nodes,N.survive.F.nodes,
-               y.nodes,z.nodes,phi.nodes=phi.nodes) #the ones that need likelihoods updated in mvSaved
+               y.nodes,z.nodes,phi.nodes) #the ones that need likelihoods updated in mvSaved
 conf$addSampler(target = c("z"),
                 type = 'zSampler',control = list(M=M,n.year=n.year,
                                                  z.obs=z.obs,z.super.ups=z.super.ups,

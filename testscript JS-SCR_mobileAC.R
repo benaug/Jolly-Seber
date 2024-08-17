@@ -5,6 +5,7 @@
 
 library(nimble)
 library(coda)
+library(truncnorm) #for data simulator
 source("sim.JS.SCR.R")
 source("Nimble Model JS-SCR_mobileAC.R")
 source("Nimble Functions JS-SCR_mobileAC.R") #contains custom distributions and updates
@@ -18,6 +19,7 @@ beta0.phi <- qlogis(0.85) #survival intercept
 beta1.phi <- 0.5 #phi response to individual covariate
 p0 <- rep(0.1,n.year) #yearly detection probabilities at activity center
 sigma <- rep(0.5,n.year) #yearly detection function scale
+sigma.move <- 0.75 #movement sigma, fixed over primary periods
 K <- rep(10,n.year) #yearly sampling occasions
 
 buff <- 2 #state space buffer. Buffers maximal x and y dimensions of X below across years
@@ -28,7 +30,7 @@ for(g in 1:n.year){ #using same trapping array every year here
 
 data <- sim.JS.SCR(lambda.y1=lambda.y1,gamma=gamma,n.year=n.year,
             beta0.phi=beta0.phi,beta1.phi=beta1.phi,
-            p0=p0,sigma=sigma,X=X,buff=buff,K=K,sigma.move=0.75)
+            p0=p0,sigma=sigma,X=X,buff=buff,K=K,sigma.move=sigma.move)
 
 
 ##Initialize##

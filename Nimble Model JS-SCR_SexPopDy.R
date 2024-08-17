@@ -36,13 +36,12 @@ NimModel <- nimbleCode({
 
   #Survival (phi must have M x n.year - 1 dimension for custom updates to work)
   #without individual or year effects, use for loop to plug into phi[i,g]
-  for(g in 1:(n.year-1)){ #yearly sex-specific survival
-    phi.sex[1,g] ~ dunif(0,1)
-    phi.sex[2,g] ~ dunif(0,1)
-  }
+  phi.sex[1] ~ dunif(0,1)
+  phi.sex[2] ~ dunif(0,1)
+  
   for(i in 1:M){
     for(g in 1:(n.year-1)){#plugging same individual phi's into each year (phi: M x n.year-1 expected by custom update)
-      phi[i,g] <- phi.sex[sex[i]+1,g]
+      phi[i,g] <- phi.sex[sex[i]+1]
     }
     #survival likelihood (bernoulli) that only sums from z.start to z.stop
     z[i,1:n.year] ~ dSurvival(phi=phi[i,1:(n.year-1)],z.start=z.start[i],z.stop=z.stop[i])

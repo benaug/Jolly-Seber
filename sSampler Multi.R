@@ -6,8 +6,8 @@ sSampler1 <- nimbleFunction(
   setup = function(model, mvSaved, target, control) {
     g <- control$g
     i <- control$i
-    xlim<-control$xlim
-    ylim<-control$ylim
+    xlim <- control$xlim
+    ylim <- control$ylim
     ## control list extraction
     # logScale            <- extractControlElement(control, 'log',                 FALSE)
     # reflective          <- extractControlElement(control, 'reflective',          FALSE)
@@ -41,12 +41,12 @@ sSampler1 <- nimbleFunction(
     if(adaptFactorExponent < 0)      stop('cannot use RW sampler with adaptFactorExponent control parameter less than 0')
     if(scale < 0)                    stop('cannot use RW sampler with scale control parameter less than 0')
   },
-  run = function() {
+  run <- function() {
     z.super <- model$z.super[i]
     z <- model$z[i,g]
     if(z.super==1&z==1){
-      s.cand=c(rnorm(1,model$s[i,g,1],scale), rnorm(1,model$s[i,g,2],scale))
-      inbox= s.cand[1]< xlim[2] & s.cand[1]> xlim[1] & s.cand[2] < ylim[2] & s.cand[2] > ylim[1]
+      s.cand <- c(rnorm(1,model$s[i,g,1],scale), rnorm(1,model$s[i,g,2],scale))
+      inbox <-s.cand[1]< xlim[2] & s.cand[1]> xlim[1] & s.cand[2] < ylim[2] & s.cand[2] > ylim[1]
       if(inbox){
         model_lp_initial <- model$getLogProb(calcNodes)
         model$s[i, g, 1:2] <<- s.cand
@@ -178,12 +178,12 @@ sSampler2 <- nimbleFunction(
     if(adaptFactorExponent < 0)      stop('cannot use RW sampler with adaptFactorExponent control parameter less than 0')
     if(scale < 0)                    stop('cannot use RW sampler with scale control parameter less than 0')
   },
-  run = function() {
+  run <- function() {
     z.super <- model$z.super[i]
     z <- model$z[i,g]
     if(z.super==1&z==0){
-      s.cand=c(rnorm(1,model$s[i,g,1],scale), rnorm(1,model$s[i,g,2],scale))
-      inbox= s.cand[1]< xlim[2] & s.cand[1]> xlim[1] & s.cand[2] < ylim[2] & s.cand[2] > ylim[1]
+      s.cand <- c(rnorm(1,model$s[i,g,1],scale), rnorm(1,model$s[i,g,2],scale))
+      inbox <- s.cand[1]< xlim[2] & s.cand[1]> xlim[1] & s.cand[2] < ylim[2] & s.cand[2] > ylim[1]
       if(inbox){
         model_lp_initial <- model$getLogProb(calcNodes)
         model$s[i, g, 1:2] <<- s.cand
@@ -317,13 +317,13 @@ sSampler3 <- nimbleFunction(
     if(adaptFactorExponent < 0)      stop('cannot use RW sampler with adaptFactorExponent control parameter less than 0')
     if(scale < 0)                    stop('cannot use RW sampler with scale control parameter less than 0')
   },
-  run = function() {
+  run <- function() {
     z.super <- model$z.super[i]
     if(z.super==0){
       s.prop <- matrix(NA,n.year,2)
       #propose year 1 from uniform prior
       s.prop[1,1:2] <- c(runif(1, xlim[1], xlim[2]), runif(1, ylim[1], ylim[2]))
-      #propose subsequent years from movemet prior (truncated Normal here)
+      #propose subsequent years from movement prior (truncated Normal here)
       for(g in 2:n.year){
         s.prop[g,1:2] <- rTruncNorm(1,xlim = xlim, ylim = ylim, s.prev=s.prop[g-1,1:2],sigma.move=model$sigma.move[1])
       }
