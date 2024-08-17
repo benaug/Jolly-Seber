@@ -9,7 +9,7 @@ sim.JS.SCR <- function(lambda.y1=NA,gamma=NA,n.year=NA,
                    p0=NA,sigma=NA,X=NA,buff=buff,K=NA,sigma.move=NULL){
   #Population dynamics
   N <- rep(NA,n.year)
-  N.recruit <- N.survive=ER=rep(NA,n.year-1)
+  N.recruit <- N.survive <- ER <- rep(NA,n.year-1)
   N[1] <- rpois(1,lambda.y1)
   
   #Easiest to increase dimension of z as we simulate bc size not known in advance.
