@@ -1,7 +1,4 @@
 #This is an SCR version with mobile activity centers, and an individual survival covariate.
-#DISCLAIMER: I haven't tested the mobile AC code via simulation, but it is relatively 
-#straightforward and several test runs looked right, for what that is worth.
-#I will remove this disclaimer when the code is tested.
 
 library(nimble)
 library(coda)
