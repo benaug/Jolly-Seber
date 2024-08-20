@@ -1,7 +1,7 @@
 #This is an SCR version with sex-specific population dynamics and recruitment
 #and Bivariate Normal Markov activity center movement across primary periods. fixing sex-specific phi over years here.
 
-#I may or may not change the z update for z=1 individuals who were not captured. Currently proposing a sex,
+#I may or may not change the z update for z.super=1 individuals who were not captured. Currently proposing a sex,
 #all z states, and movement trajectories and accept/rejecting together. This seems to be pretty efficient
 #in the scenario below, which I used to test the code. It's possible the acceptance rates will be low
 #for data sets with many primary periods and high survival, and/or when cumulative detection probability is 
