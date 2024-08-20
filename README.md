@@ -1,10 +1,10 @@
 # Jolly-Seber
-Jolly-Seber MCMC sampler in Nimble
+Jolly-Seber MCMC samplers in Nimble
 
 
 This repository contains a Jolly-Seber model and MCMC sampler that allows yearly per capita recruitment to be modeled as Poisson while allowing individual effects on survival, detection, or other things. This is achieved by representing survival and recruitment simultaneously in two sets of objects, the individual by year z matrix indicating years in the population, and N and N.recruit, the vectors for total abundance and numbers of recruits per year.
 
-This approach has some efficiency benefits and perhaps costs (not sure, yet). In Nimble, it DEFINITELY has RAM benefits for data sets with massive numbers of z's. Using the typical approach, Nimble will assign a sampler to every single z and this can eat up a lot of RAM. In my approach, there is 1 sampler assigned to all z's, comprised of around 500 lines of code. 
+This approach has some efficiency benefits and perhaps costs (not sure, yet). In Nimble, it DEFINITELY has RAM benefits for data sets with massive numbers of z's. Using the typical approach, Nimble will assign a sampler to every single z and this can eat up a lot of RAM. In my approach, there is 1 sampler assigned to all z's. 
 
 1) the dSurvival distribution only calculates the log-likelihood for survival for the relevant years (not before birth or the year after death year)
 
