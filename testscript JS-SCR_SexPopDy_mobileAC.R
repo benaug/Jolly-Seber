@@ -46,7 +46,7 @@ sigma.move.sex <- c(1.5,0.75)
 K <- rep(10,n.year) #yearly sampling occasions
 
 #probability we observe sex for detected individuals (not a function of number of capture events)
-#ASSUMPTION: sex observations are missing at random (same prob of observing male and female)
+#ASSUMPTION: sex observations are missing at random (same prob of observing male and female|detection)
 #model likely won't work well without most sexes observed
 p.obs.sex <- 1
 
