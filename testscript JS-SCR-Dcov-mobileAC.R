@@ -113,7 +113,7 @@ data <- sim.JS.SCR.Dcov.mobileAC(D.beta0=D.beta0,D.beta1=D.beta1,D.cov=D.cov,InS
 
 #visualize realized activity centers in a given year
 par(mfrow=c(1,1),ask=FALSE)
-plot.year <- 5
+plot.year <- 1
 image(x.vals,y.vals,matrix(lambda.cell,n.cells.x,n.cells.y),main="Expected Density")
 points(X.all,pch=4,cex=0.75)
 points(data$truth$s[,plot.year,],pch=16)
@@ -125,7 +125,7 @@ mask.check(dSS=data$dSS,cells=data$cells,n.cells=data$n.cells,n.cells.x=data$n.c
 
 
 ##Initialize##
-M <- 150 #data augmentation level. Check N.super posterior to make sure it never hits M
+M <- 125 #data augmentation level. Check N.super posterior to make sure it never hits M
 N.super.init <- nrow(data$y)
 X <- data$X #pull X from data (won't be in environment if not simulated directly above)
 if(N.super.init > M) stop("Must augment more than number of individuals captured")
