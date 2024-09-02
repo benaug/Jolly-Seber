@@ -192,7 +192,7 @@ for(g in 1:n.year){
 xlim <- data$xlim
 ylim <- data$ylim
 s.init <- cbind(runif(M,xlim[1],xlim[2]), runif(M,ylim[1],ylim[2])) #assign random locations
-idx=which(rowSums(y.nim)>0) #switch for those actually caught
+idx <- which(rowSums(y.nim)>0) #switch for those actually caught
 for(i in idx){
   trps <- matrix(0,nrow=0,ncol=2) #get locations of traps of capture across years for ind i
   for(g in 1:n.year){

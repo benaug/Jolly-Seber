@@ -139,7 +139,7 @@ ylim <- data$ylim
 s.init <- array(NA,dim=c(M,n.year,2))
 for(g in 1:n.year){
   s.init[,g,]=cbind(runif(M,xlim[1],xlim[2]), runif(M,ylim[1],ylim[2])) #assign random locations
-  idx=which(rowSums(y.nim[,g,])>0) #switch for those actually caught
+  idx <- which(rowSums(y.nim[,g,])>0) #switch for those actually caught
   for(i in idx){
     trps <- matrix(X.nim[g,which(y.nim[i,g,]>0),],ncol=2,byrow=FALSE)
     if(nrow(trps)>1){
@@ -230,6 +230,7 @@ conf$addSampler(target = c("z"),
                                                  N.nodes=N.nodes,N.M.nodes=N.M.nodes,N.F.nodes=N.F.nodes,
                                                  N.recruit.M.nodes=N.recruit.M.nodes,
                                                  N.recruit.F.nodes=N.recruit.F.nodes,
+                                                 s.nodes=s.nodes,
                                                  y2D=y.nim2D,sex.up=sex.up,xlim=xlim,ylim=ylim,
                                                  calcNodes=calcNodes), silent = TRUE)
 

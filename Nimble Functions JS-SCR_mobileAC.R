@@ -68,31 +68,22 @@ rBinomialVector <- nimbleFunction(
 )
 
 #function to generate Normal RVs truncated by state space
-#some concern while statements could create infinite loop,
-#but should be fine as long as all s's intialized inside 
-#state space
 rTruncNorm <- nimbleFunction(
   run = function(n = integer(0), xlim = double(1), ylim = double(1),s.prev = double(1),
                  sigma.move = double(0)) {
     if(n!=1)print("rTruncNorm only accepts n=1")
     returnType(double(1))
-    s.prop <- rep(NA,2)
-    #propose x until we get one inside xlims
-    out.ss <- TRUE
-    while(out.ss){
-      s.prop[1] <- rnorm(n,s.prev[1],sd=sigma.move)[1]
-      if(s.prop[1]>xlim[1]&s.prop[1]<xlim[2]){
-        out.ss <- FALSE
-      }
-    }
-    #propose x until we get one inside ylims
-    out.ss <- TRUE
-    while(out.ss){
-      s.prop[2] <- rnorm(n,s.prev[2],sd=sigma.move)[1]
-      if(s.prop[2]>ylim[1]&s.prop[2]<ylim[2]){
-        out.ss <- FALSE
-      }
-    }
+    #x
+    F.a <- pnorm(xlim[1],s.prev[1],sigma.move)
+    F.b <- pnorm(xlim[2],s.prev[1],sigma.move)
+    u <- runif(n,F.a,F.b)
+    s.prop.x <- qnorm(u,s.prev[1],sigma.move)
+    #y
+    F.a <- pnorm(ylim[1],s.prev[2],sigma.move)
+    F.b <- pnorm(ylim[2],s.prev[2],sigma.move)
+    u <- runif(n,F.a,F.b)
+    s.prop.y <- qnorm(u,s.prev[2],sigma.move)
+    s.prop <- c(s.prop.x,s.prop.y)
     return(s.prop)
   }
 )
