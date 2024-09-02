@@ -1,15 +1,3 @@
-# getCell <- nimbleFunction(#cell 0 not allowed in this model, but leaving in as an error check
-#   run = function(s = double(1),res=double(0),cells=integer(2),xlim=double(1),ylim=double(1)) {
-#     returnType(double(0))
-#     inout <- 1*(s[1]>xlim[1]&s[1]<xlim[2]&s[2]>ylim[1]&s[2]<ylim[2])
-#     if(inout==1){
-#       s.cell <- cells[trunc(s[1]/res)+1,trunc(s[2]/res)+1]
-#     }else{
-#       s.cell <- 0
-#     }
-#     return(s.cell)
-#   }
-# )
 #sSampler 1 updates s when z.super=1 and z=1
 sSampler1 <- nimbleFunction(
   # name = 'sampler_RW',
