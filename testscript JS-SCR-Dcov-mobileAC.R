@@ -23,15 +23,17 @@ gamma <- rep(0.2,n.year-1) #yearly per-capita recruitment
 beta0.phi <- qlogis(0.85) #survival intercept
 beta1.phi <- 0.5 #phi response to individual covariate
 p0 <- rep(0.1,n.year) #yearly detection probabilities at activity center
-sigma <- rep(0.5,n.year) #yearly detection function scale
-sigma.move <- 1 #movement sigma, fixed over primary periods
+sigma <- rep(0.75,n.year) #yearly detection function scale
+sigma.move <- 2 #movement sigma, fixed over primary periods
 rsf.beta <- 1 #selection coefficient for activity center relocation btwn primary periods
 K <- rep(10,n.year) #yearly sampling occasions
 
-buff <- 3 #state space buffer. Buffers maximal x and y dimensions of X below across years
+buff <- 6 #state space buffer. Buffers maximal x and y dimensions of X below across years
 X <- vector("list",n.year) #one trapping array per year
 for(g in 1:n.year){ #using same trapping array every year here
-  X[[g]] <- as.matrix(expand.grid(3:11,3:11))
+  # X[[g]] <- as.matrix(expand.grid(3:11,3:11))
+  X[[g]] <- as.matrix(expand.grid(seq(from=3*sigma[1],by=2*sigma[1],length.out=9),
+                                  seq(from=3*sigma[1],by=2*sigma[1],length.out=9)))
 }
 
 ### Habitat Covariate stuff###
@@ -58,7 +60,7 @@ for(g in 1:n.year){
 X.all[,1] <- X.all[,1]-x.shift
 X.all[,2] <- X.all[,2]-y.shift
 
-res <- 0.20 #habitat grid resolution, length of 1 cell side
+res <- 0.50 #habitat grid resolution, length of 1 cell side
 cellArea <- res^2 #area of one cell
 x.vals <- seq(xlim[1],xlim[2],by=res)
 y.vals <- seq(ylim[1],ylim[2],by=res)
@@ -71,36 +73,42 @@ n.cells <- nrow(dSS)
 n.cells.x <- length(x.vals) - 1
 n.cells.y <- length(y.vals) - 1
 
+#get some colors
+library(RColorBrewer)
+cols1 <- brewer.pal(9,"Greens")
+cols2 <- brewer.pal(9,"YlOrBr")
+
 #create a density covariate
-D.cov <- rep(NA,n.cells)
-for(c in 1:n.cells){
-  D.cov[c] <-  7*dSS[c,1] - 0.5*dSS[c,1]^2 + 7*dSS[c,2] - 0.5*dSS[c,2]^2
-}
-D.cov <- as.numeric(scale(D.cov))
+#simulate a D.cov, higher cov.pars for large scale cov
+set.seed(1320570)
+library(geoR)
+D.cov <- grf(n.cells,grid=dSS,cov.pars=c(25,25),messages=FALSE)[[2]]
+D.cov <- as.numeric(scale(D.cov)) #scale
+par(mfrow=c(1,1),ask=FALSE)
+image(x.vals,y.vals,matrix(D.cov,n.cells.x,n.cells.y),main="D.cov",xlab="X",ylab="Y",col=cols1)
 
 #Visualize dSS with grid. dSS should be grid centroids
 plot(dSS,pch=".")
 abline(v=x.vals,h=y.vals)
 
 image(x.vals,y.vals,matrix(D.cov,n.cells.x,n.cells.y),main="Covariate Value")
-points(X.all,pch=4,cex=0.75,col="lightblue")
+points(X.all,pch=4,cex=0.75,col="lightblue",lwd=2)
 
 
 #Additionally, maybe we want to exclude "non-habitat"
 #just removing the corners here for simplicity
 dSS.tmp <- dSS - res/2 #convert back to grid locs
 InSS <- rep(1,length(D.cov))
-InSS[dSS.tmp[,1]<2&dSS.tmp[,2]<2] <- 0
-InSS[dSS.tmp[,1]<2&dSS.tmp[,2]>12] <- 0
-InSS[dSS.tmp[,1]>12&dSS.tmp[,2]<2] <- 0
-InSS[dSS.tmp[,1]>12&dSS.tmp[,2]>12] <- 0
+InSS[dSS.tmp[,1]<(xlim[1]+1)&dSS.tmp[,2]<(ylim[1]+1)] <- 0
+InSS[dSS.tmp[,1]<(xlim[1]+1)&dSS.tmp[,2]>=(ylim[2]-1)] <- 0
+InSS[dSS.tmp[,1]>=(xlim[2]-1)&dSS.tmp[,2]<(ylim[1]+1)] <- 0
+InSS[dSS.tmp[,1]>=(xlim[2]-1)&dSS.tmp[,2]>=(ylim[2]-1)] <- 0
 
 image(x.vals,y.vals,matrix(InSS,n.cells.x,n.cells.y),main="Habitat")
 
 #Density covariates
-# D.beta0 <- -2
-D.beta0 <- -3
-D.beta1 <- 2
+D.beta0 <- -2.5
+D.beta1 <- 1
 #what is implied expected N in state space?
 lambda.cell <- exp(D.beta0 + D.beta1*D.cov)*cellArea
 sum(lambda.cell) #expected N in state space
@@ -112,11 +120,12 @@ data <- sim.JS.SCR.Dcov.mobileAC(D.beta0=D.beta0,D.beta1=D.beta1,D.cov=D.cov,InS
             X=X,K=K,xlim=xlim,ylim=ylim,res=res)
 
 #visualize realized activity centers in a given year
+#compare first and last year to see if/how spatial distribution of activity centers changed over time.
 par(mfrow=c(1,1),ask=FALSE)
-plot.year <- 1
-image(x.vals,y.vals,matrix(lambda.cell,n.cells.x,n.cells.y),main="Expected Density")
+plot.year <- 5
+image(x.vals,y.vals,matrix(data$truth$pi.cell[plot.year,],n.cells.x,n.cells.y),main=paste("Expected proportion of N in each cell, year", plot.year))
 points(X.all,pch=4,cex=0.75)
-points(data$truth$s[,plot.year,],pch=16)
+points(data$truth$s[data$truth$z[,plot.year]==1,plot.year,],pch=16)
 
 #function to test for errors in mask set up. 
 mask.check(dSS=data$dSS,cells=data$cells,n.cells=data$n.cells,n.cells.x=data$n.cells.x,
@@ -125,7 +134,7 @@ mask.check(dSS=data$dSS,cells=data$cells,n.cells=data$n.cells,n.cells.x=data$n.c
 
 
 ##Initialize##
-M <- 125 #data augmentation level. Check N.super posterior to make sure it never hits M
+M <- 225 #data augmentation level. Check N.super posterior to make sure it never hits M
 N.super.init <- nrow(data$y)
 X <- data$X #pull X from data (won't be in environment if not simulated directly above)
 if(N.super.init > M) stop("Must augment more than number of individuals captured")
@@ -366,13 +375,13 @@ Cmcmc <- compileNimble(Rmcmc, project = Rmodel)
 
 # Run the model.
 start.time2 <- Sys.time()
-Cmcmc$run(1000,reset=FALSE) #can extend run by rerunning this line
+Cmcmc$run(5000,reset=FALSE) #can extend run by rerunning this line
 end.time <- Sys.time()
 time1 <- end.time-start.time  # total time for compilation, replacing samplers, and fitting
 time2 <- end.time-start.time2 # post-compilation run time
 
 mvSamples <-  as.matrix(Cmcmc$mvSamples)
-plot(mcmc(mvSamples[-c(1:250),]))
+plot(mcmc(mvSamples[-c(1:50),]))
 
 #reminder what the targets are
 data$N
@@ -382,8 +391,9 @@ data$N[1]+sum(data$N.recruit) #N.super
 
 
 
-pdf("test_RSF_mobileAC.pdf")
-plot(mcmc(mvSamples[-c(1:1000),c(1,2,31,33)]))
+pdf("test_RSF_mobileAC2.pdf")
+# plot(mcmc(mvSamples[-c(1:100),c(1,2,31,33)]))
+plot(mcmc(mvSamples[-c(1:1000),]))
 dev.off()
 
 #Some sanity checks I used during debugging. Just checking that final

@@ -109,9 +109,16 @@ sim.JS.SCR.Dcov.mobileAC <- function(D.beta0=NA,D.beta1=NA,D.cov=NA,InSS=NA,
       }
     }
   }
+  
+  #expected proportion of realized N in cell 
+  pi.cell <- array(NA,dim=c(n.year,n.cells))
+  pi.cell[1,] <- lambda.cell/sum(lambda.cell)
+  for(g in 2:n.year){
+    pi.cell[g,] <- colSums(use.dist[z[,g]==1,g-1,])
+  }
 
   #store true data for model building/debugging
-  truth <- list(y=y,cov=cov,N=N,N.recruit=N.recruit,N.survive=N.survive,z=z,s=s)
+  truth <- list(y=y,cov=cov,N=N,N.recruit=N.recruit,N.survive=N.survive,z=z,s=s,pi.cell=pi.cell)
 
   #discard undetected individuals
   keep.idx <- which(rowSums(y)>0)
