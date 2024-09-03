@@ -62,16 +62,13 @@ X.all[,2] <- X.all[,2]-y.shift
 
 res <- 0.50 #habitat grid resolution, length of 1 cell side
 cellArea <- res^2 #area of one cell
-x.vals <- seq(xlim[1],xlim[2],by=res)
-y.vals <- seq(ylim[1],ylim[2],by=res)
-dSS <- as.matrix(expand.grid(x.vals,y.vals)) + res/2 #add res/2 to get cell centroids
-#remove extra cells created outside xlim and ylim
-rem.idx <- which(dSS[,1]>xlim[2]|dSS[,2]>ylim[2])
-dSS <- dSS[-rem.idx,]
-cells <- matrix(1:nrow(dSS),nrow=length(x.vals)-1,ncol=length(y.vals)-1)
+x.vals <- seq(xlim[1]+res/2,xlim[2]-res/2,res) #x cell centroids
+y.vals <- seq(ylim[1]+res/2,ylim[2]-res/2,res) #y cell centroids
+dSS <- as.matrix(cbind(expand.grid(x.vals,y.vals)))
+cells <- matrix(1:nrow(dSS),nrow=length(x.vals),ncol=length(y.vals))
 n.cells <- nrow(dSS)
-n.cells.x <- length(x.vals) - 1
-n.cells.y <- length(y.vals) - 1
+n.cells.x <- length(x.vals)
+n.cells.y <- length(y.vals)
 
 #get some colors
 library(RColorBrewer)
@@ -122,10 +119,23 @@ data <- sim.JS.SCR.Dcov.mobileAC(D.beta0=D.beta0,D.beta1=D.beta1,D.cov=D.cov,InS
 #visualize realized activity centers in a given year
 #compare first and last year to see if/how spatial distribution of activity centers changed over time.
 par(mfrow=c(1,1),ask=FALSE)
-plot.year <- 5
-image(x.vals,y.vals,matrix(data$truth$pi.cell[plot.year,],n.cells.x,n.cells.y),main=paste("Expected proportion of N in each cell, year", plot.year))
+plot.year <- 1
+image(x.vals,y.vals,matrix(data$truth$pi.cell[plot.year,],n.cells.x,n.cells.y),
+      main=paste("Expected proportion of N in each cell, year", plot.year))
 points(X.all,pch=4,cex=0.75)
 points(data$truth$s[data$truth$z[,plot.year]==1,plot.year,],pch=16)
+
+#can look at individual by year availability and use distributions
+# i <- 1
+# g <- 1
+# par(mfrow=c(3,1))
+# image(x.vals,y.vals,matrix(data$truth$avail.dist[i,g,],n.cells.x,n.cells.y),main="Availability Distribution")
+# points(data$truth$s[i,g,1],data$truth$s[i,g,2],pch=16,col="lightblue")
+# image(x.vals,y.vals,matrix(D.cov,n.cells.x,n.cells.y),main="RSF Cov")
+# points(data$truth$s[i,g,1],data$truth$s[i,g,2],pch=16,col="lightblue")
+# image(x.vals,y.vals,matrix(data$truth$use.dist[i,g,],n.cells.x,n.cells.y),main="Use Distribution")
+# points(data$truth$s[i,g,1],data$truth$s[i,g,2],pch=16,col="lightblue")
+# par(mfrow=c(1,1))
 
 #function to test for errors in mask set up. 
 mask.check(dSS=data$dSS,cells=data$cells,n.cells=data$n.cells,n.cells.x=data$n.cells.x,
@@ -381,7 +391,7 @@ time1 <- end.time-start.time  # total time for compilation, replacing samplers, 
 time2 <- end.time-start.time2 # post-compilation run time
 
 mvSamples <-  as.matrix(Cmcmc$mvSamples)
-plot(mcmc(mvSamples[-c(1:50),]))
+plot(mcmc(mvSamples[-c(1:250),]))
 
 #reminder what the targets are
 data$N
@@ -389,53 +399,3 @@ data$N.recruit
 data$N.survive
 data$N[1]+sum(data$N.recruit) #N.super
 
-
-
-pdf("test_RSF_mobileAC2.pdf")
-# plot(mcmc(mvSamples[-c(1:100),c(1,2,31,33)]))
-plot(mcmc(mvSamples[-c(1:1000),]))
-dev.off()
-
-#Some sanity checks I used during debugging. Just checking that final
-#model states match between z and N objects
-
-# #check N count
-# N.count <- rep(NA,n.year)
-# for(g2 in 1:n.year){
-#   N.count[g2] <- sum(Cmodel$z[Cmodel$z.super==1,g2]==1)
-# }
-# N.count
-# Cmodel$N
-# 
-# #check N.recruit count
-# N.count <- rep(NA,n.year-1)
-# for(g2 in 2:n.year){
-#   N.count[g2-1] <- sum(Cmodel$z[Cmodel$z.super==1,g2-1]==0&Cmodel$z[Cmodel$z.super==1,g2]==1)
-# }
-# N.count
-# Cmodel$N.recruit
-# 
-# #check N.survive count
-# N.count <- rep(NA,n.year-1)
-# for(g2 in 2:n.year){
-#   N.count[g2-1] <- sum(Cmodel$z[Cmodel$z.super==1,g2-1]==1&Cmodel$z[Cmodel$z.super==1,g2]==1)
-# }
-# N.count
-# Cmodel$N.survive
-# 
-# #are individual z's consistent with their z.start and z.stop?
-# all(apply(Cmodel$z,1,function(x){min(which(x==1))})==Cmodel$z.start)
-# all(apply(Cmodel$z,1,function(x){max(which(x==1))})==Cmodel$z.stop)
-# 
-# #zombie check
-# for(i in 1:M){
-#   z.tmp <- Cmodel$z[i,]
-#   z.on <- which(z.tmp==1)
-#   first <- z.on[1]
-#   last <- z.on[length(z.on)]
-#   if(length(z.on)>1){
-#     if(any(z.tmp[first:last]==0)){
-#       stop("rawr!")
-#     }
-#   }
-# }

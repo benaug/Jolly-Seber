@@ -18,17 +18,14 @@ sim.JS.SCR.Dcov.mobileAC <- function(D.beta0=NA,D.beta1=NA,D.cov=NA,InSS=NA,
   N[1] <- rpois(1,lambda.y1)
 
   #recreate some Dcov things so we can pass fewer arguments into this function
-  x.vals <- seq(xlim[1],xlim[2],by=res)
-  y.vals <- seq(ylim[1],ylim[2],by=res)
-  dSS <- as.matrix(expand.grid(x.vals,y.vals)) + res/2 #add res/2 to get cell centroids
-  #remove extra cells created outside xlim and ylim
-  rem.idx <- which(dSS[,1]>xlim[2]|dSS[,2]>ylim[2])
-  dSS <- dSS[-rem.idx,]
-  cells <- matrix(1:nrow(dSS),nrow=length(x.vals)-1,ncol=length(y.vals)-1)
+  x.vals <- seq(xlim[1]+res/2,xlim[2]-res/2,res)
+  y.vals <- seq(ylim[1]+res/2,ylim[2]-res/2,res)
+  dSS <- as.matrix(cbind(expand.grid(x.vals,y.vals)))
+  cells <- matrix(1:nrow(dSS),nrow=length(x.vals),ncol=length(y.vals))
   n.cells <- nrow(dSS)
-  n.cells.x <- length(x.vals) - 1
-  n.cells.y <- length(y.vals) - 1
-
+  n.cells.x <- length(x.vals)
+  n.cells.y <- length(y.vals)
+  
   #Easiest to increase dimension of z as we simulate bc size not known in advance.
   z <- matrix(0,N[1],n.year)
   z[1:N[1],1] <- 1
@@ -76,9 +73,10 @@ sim.JS.SCR.Dcov.mobileAC <- function(D.beta0=NA,D.beta1=NA,D.cov=NA,InSS=NA,
   #distribute activity centers uniformly inside cells
   s <- array(NA,dim=c(N.super,n.year,2))
   for(i in 1:N.super){
-    tmp <- which(cells==s.cell[i,1],arr.ind=TRUE) #x and y number
-    s[i,1,1] <- runif(1,x.vals[tmp[1]],x.vals[tmp[1]+1])
-    s[i,1,2] <- runif(1,y.vals[tmp[2]],y.vals[tmp[2]+1])
+    s.xlim <- dSS[s.cell[i],1] + c(-res,res)/2
+    s.ylim <- dSS[s.cell[i],2] + c(-res,res)/2
+    s[i,1,1] <- runif(1,s.xlim[1],s.xlim[2])
+    s[i,1,2] <- runif(1,s.ylim[1],s.ylim[2])
   }
   #subsequent years
   avail.dist <- use.dist <- array(NA,dim=c(N.super,n.year-1,n.cells))
@@ -118,7 +116,8 @@ sim.JS.SCR.Dcov.mobileAC <- function(D.beta0=NA,D.beta1=NA,D.cov=NA,InSS=NA,
   }
 
   #store true data for model building/debugging
-  truth <- list(y=y,cov=cov,N=N,N.recruit=N.recruit,N.survive=N.survive,z=z,s=s,pi.cell=pi.cell)
+  truth <- list(y=y,cov=cov,N=N,N.recruit=N.recruit,N.survive=N.survive,z=z,s=s,s.cell=s.cell,pi.cell=pi.cell,
+                avail.dist=avail.dist,use.dist=use.dist)
 
   #discard undetected individuals
   keep.idx <- which(rowSums(y)>0)

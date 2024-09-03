@@ -68,16 +68,13 @@ X.all[,2] <- X.all[,2]-y.shift
 
 res <- 0.20 #habitat grid resolution, length of 1 cell side
 cellArea <- res^2 #area of one cell
-x.vals <- seq(xlim[1],xlim[2],by=res)
-y.vals <- seq(ylim[1],ylim[2],by=res)
-dSS <- as.matrix(expand.grid(x.vals,y.vals)) + res/2 #add res/2 to get cell centroids
-#remove extra cells created outside xlim and ylim
-rem.idx <- which(dSS[,1]>xlim[2]|dSS[,2]>ylim[2])
-dSS <- dSS[-rem.idx,]
-cells <- matrix(1:nrow(dSS),nrow=length(x.vals)-1,ncol=length(y.vals)-1)
+x.vals <- seq(xlim[1]+res/2,xlim[2]-res/2,res) #x cell centroids
+y.vals <- seq(ylim[1]+res/2,ylim[2]-res/2,res) #y cell centroids
+dSS <- as.matrix(cbind(expand.grid(x.vals,y.vals)))
+cells <- matrix(1:nrow(dSS),nrow=length(x.vals),ncol=length(y.vals))
 n.cells <- nrow(dSS)
-n.cells.x <- length(x.vals) - 1
-n.cells.y <- length(y.vals) - 1
+n.cells.x <- length(x.vals)
+n.cells.y <- length(y.vals)
 
 #create a density covariate
 D.cov <- rep(NA,n.cells)

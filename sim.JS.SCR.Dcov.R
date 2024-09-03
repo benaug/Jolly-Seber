@@ -17,16 +17,13 @@ sim.JS.SCR.Dcov <- function(D.beta0=NA,D.beta1=NA,D.cov=NA,InSS=NA,
   N[1] <- rpois(1,lambda.y1)
 
   #recreate some Dcov things so we can pass fewer arguments into this function
-  x.vals <- seq(xlim[1],xlim[2],by=res)
-  y.vals <- seq(ylim[1],ylim[2],by=res)
-  dSS <- as.matrix(expand.grid(x.vals,y.vals)) + res/2 #add res/2 to get cell centroids
-  #remove extra cells created outside xlim and ylim
-  rem.idx <- which(dSS[,1]>xlim[2]|dSS[,2]>ylim[2])
-  dSS <- dSS[-rem.idx,]
-  cells <- matrix(1:nrow(dSS),nrow=length(x.vals)-1,ncol=length(y.vals)-1)
+  x.vals <- seq(xlim[1]+res/2,xlim[2]-res/2,res) #x cell centroids
+  y.vals <- seq(ylim[1]+res/2,ylim[2]-res/2,res) #y cell centroids
+  dSS <- as.matrix(cbind(expand.grid(x.vals,y.vals)))
+  cells <- matrix(1:nrow(dSS),nrow=length(x.vals),ncol=length(y.vals))
   n.cells <- nrow(dSS)
-  n.cells.x <- length(x.vals) - 1
-  n.cells.y <- length(y.vals) - 1
+  n.cells.x <- length(x.vals)
+  n.cells.y <- length(y.vals)
 
   #Easiest to increase dimension of z as we simulate bc size not known in advance.
   z <- matrix(0,N[1],n.year)
@@ -74,15 +71,16 @@ sim.JS.SCR.Dcov <- function(D.beta0=NA,D.beta1=NA,D.cov=NA,InSS=NA,
   #distribute activity centers uniformly inside cells
   s <- matrix(NA,nrow=N.super,ncol=2)
   for(i in 1:N.super){
-    tmp <- which(cells==s.cell[i],arr.ind=TRUE) #x and y number
-    s[i,1] <- runif(1,x.vals[tmp[1]],x.vals[tmp[1]+1])
-    s[i,2] <- runif(1,y.vals[tmp[2]],y.vals[tmp[2]+1])
+    s.xlim <- dSS[s.cell[i],1] + c(-res,res)/2
+    s.ylim <- dSS[s.cell[i],2] + c(-res,res)/2
+    s[i,1] <- runif(1,s.xlim[1],s.xlim[2])
+    s[i,2] <- runif(1,s.ylim[1],s.ylim[2])
   }
 
   pd <- y <- array(0,dim=c(N.super,n.year,J.max))
   for(g in 1:n.year){
-    D<- e2dist(s,X[[g]])
-    pd[,g,1:J[g]]<- p0[g]*exp(-D*D/(2*sigma[g]*sigma[g]))
+    D <- e2dist(s,X[[g]])
+    pd[,g,1:J[g]] <- p0[g]*exp(-D*D/(2*sigma[g]*sigma[g]))
     for(i in 1:N.super){
       if(z[i,g]==1){
           y[i,g,1:J[g]] <- rbinom(J[g],K[g],pd[i,g,1:J[g]])
