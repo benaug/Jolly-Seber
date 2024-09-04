@@ -121,11 +121,11 @@ data <- sim.JS.SCR.Dcov.mobileAC(D.beta0=D.beta0,D.beta1=D.beta1,D.cov=D.cov,InS
 par(mfrow=c(1,1),ask=FALSE)
 plot.year <- 1
 image(x.vals,y.vals,matrix(data$truth$pi.cell[plot.year,],n.cells.x,n.cells.y),
-      main=paste("Expected proportion of N in each cell, year", plot.year))
+      main=paste("Expected proportion of realized N in each cell, year", plot.year))
 points(X.all,pch=4,cex=0.75)
 points(data$truth$s[data$truth$z[,plot.year]==1,plot.year,],pch=16)
 
-#can look at individual by year availability and use distributions
+# can look at individual by year availability and use distributions
 # i <- 1
 # g <- 1
 # par(mfrow=c(3,1))
@@ -398,4 +398,3 @@ data$N
 data$N.recruit
 data$N.survive
 data$N[1]+sum(data$N.recruit) #N.super
-
