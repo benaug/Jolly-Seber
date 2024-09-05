@@ -37,7 +37,8 @@ NimModel <- nimbleCode({
   rsf.beta ~ dnorm(0,sd=10)
   sigma.move ~ dunif(0,100) #activity center relocation spatial scale parameter (BVN sd)
   #Resource selection function evaluated across all cells for activity center relocation
-  rsf[1:n.cells] <- exp(rsf.beta*D.cov[1:n.cells])
+  # rsf[1:n.cells] <- exp(rsf.beta*D.cov[1:n.cells]) #if not excluding non-habitat
+  rsf[1:n.cells] <- exp(rsf.beta*D.cov[1:n.cells] -5000*OutSS[1:n.cells])
   for(i in 1:M){
     phi.cov[i] ~ dnorm(phi.cov.mu, sd = phi.cov.sd)
     #1st year activity centers
