@@ -81,6 +81,7 @@ sim.JS.SCR.Dcov.mobileAC <- function(D.beta0=NA,D.beta1=NA,D.cov=NA,InSS=NA,
   #subsequent years
   avail.dist <- use.dist <- array(NA,dim=c(N.super,n.year-1,n.cells))
   rsf <- exp(rsf.beta*D.cov)
+  rsf[InSS==0] <- 0 #disallow individuals moving into nonhabitat
   for(g in 2:n.year){
     for(i in 1:N.super){
       avail.dist[i,g-1,] <- getAvail(s=s[i,g-1,1:2],sigma=sigma.move,res=res,x.vals=x.vals,
