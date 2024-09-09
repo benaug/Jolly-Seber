@@ -83,10 +83,6 @@ for(c in 1:n.cells){
 }
 D.cov <- as.numeric(scale(D.cov))
 
-#Visualize dSS with grid. dSS should be grid centroids
-plot(dSS,pch=".")
-abline(v=x.vals,h=y.vals)
-
 image(x.vals,y.vals,matrix(D.cov,n.cells.x,n.cells.y),main="Covariate Value")
 points(X.all,pch=4,cex=0.75,col="lightblue")
 
