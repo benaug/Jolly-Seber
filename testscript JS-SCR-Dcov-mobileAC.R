@@ -213,11 +213,14 @@ for(g in 1:n.year){
 #pull out state space with buffer around maximal trap dimensions
 xlim <- data$xlim
 ylim <- data$ylim
+
+#initialize activity centers. Could be improved, but this should be decent
+#1) initialize captured guy ACs in years captured, set to mean of captured years in uncaptured years
 s.init <- array(NA,dim=c(M,n.year,2))
-for(g in 1:n.year){
-  s.init[,g,] <- cbind(runif(M,xlim[1],xlim[2]), runif(M,ylim[1],ylim[2])) #assign random locations
-  idx <- which(rowSums(y.nim[,g,])>0) #switch for those actually caught
-  for(i in idx){
+for(i in 1:N.super.init){
+  cap.years <- which(rowSums(y.nim[i,,])>0) 
+  nocap.years <- setdiff(1:n.year,cap.years)
+  for(g in cap.years){
     #add small increment so we don't initialize exactly on a cell boundary, can lead to -Inf starting logprob due to BNV inside cell
     trps <- matrix(X.nim[g,which(y.nim[i,g,]>0),],ncol=2,byrow=FALSE) + 0.000001
     if(nrow(trps)>1){
@@ -225,6 +228,36 @@ for(g in 1:n.year){
     }else{
       s.init[i,g,] <- trps
     }
+  }
+  if(length(nocap.years)>0){
+    if(length(cap.years)>1){
+      s.tmp <- colMeans(s.init[i,cap.years,])
+    }else{
+      s.tmp <- s.init[i,cap.years,]
+    }
+    s.init[i,nocap.years,1] <- s.tmp[1]
+    s.init[i,nocap.years,2] <- s.tmp[2]
+  }
+}
+
+#2) get a starting sigma.move that will have a finite logprob
+#use to simulating s.inits for augmented individuals
+sigma.move.init <- 0
+for(g in 2:n.year){
+  tmp.dists <- sqrt((s.init[1:N.super.init,g,1]-s.init[1:N.super.init,g-1,1])^2+(s.init[1:N.super.init,g,2]-s.init[1:N.super.init,g-1,2])^2)
+  d.max <- max(c((s.init[1:N.super.init,g,1]-s.init[1:N.super.init,g-1,1])^2,(s.init[1:N.super.init,g,2]-s.init[1:N.super.init,g-1,2])^2))
+  sigma.move.tmp <- sqrt(d.max)
+  if(sigma.move.tmp>sigma.move.init){
+    sigma.move.init <- sigma.move.tmp
+  }
+}
+
+#3) simulate trajectories for the augmented individuals using sigma.move.init
+for(i in (N.super.init+1):M){
+  s.init[i,1,] <- cbind(runif(1,xlim[1],xlim[2]), runif(1,ylim[1],ylim[2])) #assign random locations
+  for(g in 2:n.year){
+    s.init[i,g,1] <- rtruncnorm(1,xlim[1],xlim[2],mean=s.init[i,g-1,1],sd=sigma.move.init)
+    s.init[i,g,2] <- rtruncnorm(1,ylim[1],ylim[2],mean=s.init[i,g-1,2],sd=sigma.move.init)
   }
 }
 
@@ -255,17 +288,6 @@ s.cell.init <- matrix(NA,M,n.year)
 for(i in 1:M){
   for(g in 1:n.year){
     s.cell.init[i,g] <- data$cells[trunc(s.init[i,g,1]/data$res)+1,trunc(s.init[i,g,2]/data$res)+1]
-  }
-}
-
-#get a starting sigma.move that will have a finite logprob
-sigma.move.init <- 0
-for(g in 2:n.year){
-  tmp.dists <- sqrt((s.init[,g,1]-s.init[,g-1,1])^2+(s.init[,g,2]-s.init[,g-1,2])^2)
-  d.max <- max(c((s.init[,g,1]-s.init[,g-1,1])^2,(s.init[,g,2]-s.init[,g-1,2])^2))
-  sigma.move.tmp <- sqrt(d.max)
-  if(sigma.move.tmp>sigma.move.init){
-    sigma.move.init <- sigma.move.tmp
   }
 }
 
@@ -392,7 +414,7 @@ Cmcmc <- compileNimble(Rmcmc, project = Rmodel)
 
 # Run the model.
 start.time2 <- Sys.time()
-Cmcmc$run(2500,reset=FALSE) #can extend run by rerunning this line
+Cmcmc$run(5000,reset=FALSE) #can extend run by rerunning this line
 end.time <- Sys.time()
 time1 <- end.time-start.time  # total time for compilation, replacing samplers, and fitting
 time2 <- end.time-start.time2 # post-compilation run time
