@@ -72,7 +72,7 @@ sSamplerDcov <- nimbleFunction(
         } else {
           copy(from = mvSaved, to = model, row = 1, nodes = calcNodes, logProb = TRUE)
         }
-        if(adaptive){ #we only tune for z=0 proposals
+        if(adaptive){ #we only tune for z=1 proposals
           adaptiveProcedure(accept)
         }
       }
