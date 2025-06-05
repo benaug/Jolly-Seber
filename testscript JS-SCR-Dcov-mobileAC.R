@@ -253,6 +253,7 @@ for(g in 2:n.year){
 }
 
 #3) simulate trajectories for the augmented individuals using sigma.move.init
+library(truncnorm)
 for(i in (N.super.init+1):M){
   s.init[i,1,] <- cbind(runif(1,xlim[1],xlim[2]), runif(1,ylim[1],ylim[2])) #assign random locations
   for(g in 2:n.year){

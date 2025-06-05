@@ -51,21 +51,14 @@ getAvail <- nimbleFunction(
     }else{
       y.stop <- n.cells.y
     }
+    #get pnorms
     pnorm.x <- rep(0,n.cells.x+1)
     pnorm.y <- rep(0,n.cells.y+1)
-    #get pnorms
-    for(l in x.start:(x.stop+1)){
-      pnorm.x[l] <- pnorm(x.vals.edges[l],mean=s[1],sd=sigma)
-    }
-    for(l in y.start:(y.stop+1)){
-      pnorm.y[l] <- pnorm(y.vals.edges[l],mean=s[2],sd=sigma)
-    }
-    for(l in (x.start):(x.stop)){
-      avail.dist.x[l] <- pnorm.x[l+1] - pnorm.x[l]
-    }
-    for(l in (y.start):(y.stop)){
-      avail.dist.y[l] <- pnorm.y[l+1] - pnorm.y[l]
-    }
+    pnorm.x[x.start:(x.stop+1)] <- pnorm(x.vals.edges[x.start:(x.stop+1)], mean=s[1], sd=sigma)
+    pnorm.y[y.start:(y.stop+1)] <- pnorm(y.vals.edges[y.start:(y.stop+1)], mean=s[2], sd=sigma)
+    # Compute availability distributions
+    avail.dist.x[x.start:x.stop] <- pnorm.x[(x.start+1):(x.stop+1)] - pnorm.x[x.start:x.stop]
+    avail.dist.y[y.start:y.stop] <- pnorm.y[(y.start+1):(y.stop+1)] - pnorm.y[y.start:y.stop]
     avail.dist.tmp <- matrix(0,n.cells.x,n.cells.y)
     sum.dist <- 0
     for(i in x.start:x.stop){
