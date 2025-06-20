@@ -114,7 +114,7 @@ OutSS <- 1-InSS
 D.beta0 <- -2.5
 D.beta1 <- 1
 #what is implied expected N in state space?
-lambda.cell <- exp(D.beta0 + D.beta1*D.cov)*cellArea
+lambda.cell <- InSS*exp(D.beta0 + D.beta1*D.cov)*cellArea
 sum(lambda.cell) #expected N in state space
 
 #simulate some data

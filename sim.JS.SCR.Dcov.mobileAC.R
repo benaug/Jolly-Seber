@@ -13,7 +13,7 @@ sim.JS.SCR.Dcov.mobileAC <- function(D.beta0=NA,D.beta1=NA,D.cov=NA,InSS=NA,
   N.recruit <- N.survive <- ER <- rep(NA,n.year-1)
   #get expected N in year 1 from D.cov parameters
   cellArea <- res^2
-  lambda.cell <- exp(D.beta0 + D.beta1*D.cov)*cellArea
+  lambda.cell <- InSS*exp(D.beta0 + D.beta1*D.cov)*cellArea
   lambda.y1 <- sum(lambda.cell)
   N[1] <- rpois(1,lambda.y1)
 
