@@ -65,8 +65,6 @@ sim.JS.SCR.Dcov <- function(D.beta0=NA,D.beta1=NA,D.cov=NA,InSS=NA,
   N.super <- nrow(z)
   # simulate a population of activity centers
   pi.cell <- lambda.cell/sum(lambda.cell)
-  #zero out non-habitat
-  pi.cell[InSS==0] <- 0
   s.cell <- sample(1:n.cells,N.super,prob=pi.cell,replace=TRUE)
   #distribute activity centers uniformly inside cells
   s <- matrix(NA,nrow=N.super,ncol=2)
