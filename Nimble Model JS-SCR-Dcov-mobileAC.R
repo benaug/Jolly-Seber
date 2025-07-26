@@ -6,11 +6,8 @@ NimModel <- nimbleCode({
   # D.intercept <- exp(D.beta0)*cellArea
   D.intercept <- D0*cellArea
   #First year density model
-  for(c in 1:n.cells) {
-    lambda.cell[c] <- InSS[c]*exp(D.beta1*D.cov[c]) #separate this component so s's do not depend on D.intercept
-    lambda.y1.cell[1,c] <- D.intercept*lambda.cell[c] #expected N in cell c
-    pi.cell[c] <- lambda.cell[c] / pi.denom #expected proportion of total N in cell c
-  }
+  lambda.cell[1:n.cells] <- InSS[1:n.cells]*exp(D.beta1*D.cov[1:n.cells]) #separate this component so s's do not depend on D.intercept
+  pi.cell[1:n.cells] <- lambda.cell[1:n.cells] / pi.denom #expected proportion of total N in cell c
   pi.denom <- sum(lambda.cell[1:n.cells])
   
   ##Abundance##
@@ -38,7 +35,7 @@ NimModel <- nimbleCode({
   sigma.move ~ dunif(0,100) #activity center relocation spatial scale parameter (BVN sd)
   #Resource selection function evaluated across all cells for activity center relocation
   # rsf[1:n.cells] <- exp(rsf.beta*D.cov[1:n.cells]) #if not excluding non-habitat
-  rsf[1:n.cells] <- exp(rsf.beta*D.cov[1:n.cells] -5000*OutSS[1:n.cells])
+  rsf[1:n.cells] <- InSS[1:n.cells]*exp(rsf.beta*D.cov[1:n.cells])
   for(i in 1:M){
     phi.cov[i] ~ dnorm(phi.cov.mu, sd = phi.cov.sd)
     #1st year activity centers
@@ -47,7 +44,7 @@ NimModel <- nimbleCode({
     #get cell s_i lives in using look-up table
     s.cell[i,1] <- cells[trunc(s[i,1,1]/res)+1,trunc(s[i,1,2]/res)+1]
     #categorical likelihood for this cell, equivalent to zero's trick
-    dummy.data[i] ~ dCell(pi.cell[s.cell[i,1]],InSS[s.cell[i,1]])
+    dummy.data[i] ~ dCell(pi.cell[s.cell[i,1]])
     #subsequent year activity center - movement with resource selection
     for(g in 2:n.year){
       #Individual availability distributions conditioned on cells, bivariate Normal centered on activity center

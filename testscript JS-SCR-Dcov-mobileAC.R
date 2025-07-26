@@ -100,16 +100,6 @@ InSS[dSS.tmp[,1]>=(xlim[2]-1)&dSS.tmp[,2]>=(ylim[2]-1)] <- 0
 
 image(x.vals,y.vals,matrix(InSS,n.cells.x,n.cells.y),main="Habitat")
 
-#if we exclude non-habitat in first year D model, we should exclude it in the RSF model
-#so they can't move into these cells after year 1. I'm using outSS to indicate the cells not in the state space
-#if you don't use OutSS, need to remove it from the nimble model file where we compute "rsf"
-OutSS <- 1-InSS
-
-##Overall comment about "non-habitat", it is probably better to treat the habitat covariate(s) that was
-#used to exclude habitat as a density and RSF covariate and estimate the betas.
-#using InSS and OutSS is hard coding in a density of 0 in these cells.
-
-
 #Density covariates
 D.beta0 <- -2.5
 D.beta1 <- 1
@@ -312,7 +302,7 @@ Niminits <- list(N=N.init,N.survive=N.survive.init,N.recruit=N.recruit.init,
 #data for Nimble
 dummy.data <- rep(0,M) #dummy data not used, doesn't really matter what the values are
 Nimdata <- list(y=y.nim,phi.cov=phi.cov.data,X=X.nim,dSS=dSS,
-                dummy.data=dummy.data,cells=cells,InSS=data$InSS,OutSS=OutSS)
+                dummy.data=dummy.data,cells=cells,InSS=data$InSS)
 
 # set parameters to monitor
 parameters <- c('N','gamma','N.recruit','N.survive','N.super','lambda.y1',

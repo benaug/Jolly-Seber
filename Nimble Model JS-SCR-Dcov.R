@@ -5,11 +5,8 @@ NimModel <- nimbleCode({
   D.beta1 ~ dnorm(0,sd=10)
   # D.intercept <- exp(D.beta0)*cellArea
   D.intercept <- D0*cellArea
-  for(c in 1:n.cells) {
-    lambda.cell[c] <- InSS[c]*exp(D.beta1*D.cov[c]) #separate this component so s's do not depend on D.intercept
-    lambda.y1.cell[1,c] <- D.intercept*lambda.cell[c] #expected N in cell c
-    pi.cell[c] <- lambda.cell[c] / pi.denom #expected proportion of total N in cell c
-  }
+  lambda.cell[1:n.cells] <- InSS[1:n.cells]*exp(D.beta1*D.cov[1:n.cells]) #separate this component so s's do not depend on D.intercept
+  pi.cell[1:n.cells] <- lambda.cell[1:n.cells]/pi.denom #expected proportion of total N in cell c
   pi.denom <- sum(lambda.cell[1:n.cells])
   
   ##Abundance##
@@ -38,7 +35,7 @@ NimModel <- nimbleCode({
     s[i,2] ~ dunif(ylim[1],ylim[2])
     #get cell s_i lives in using look-up table
     s.cell[i] <- cells[trunc(s[i,1]/res)+1,trunc(s[i,2]/res)+1]
-    dummy.data[i] ~ dCell(pi.cell[s.cell[i]],InSS[s.cell[i]]) #categorical likelihood for this cell, equivalent to zero's trick
+    dummy.data[i] ~ dCell(pi.cell[s.cell[i]]) #categorical likelihood for this cell, equivalent to zero's trick
   }
   
   #Survival (phi must have M x n.year - 1 dimension for custom updates to work)
