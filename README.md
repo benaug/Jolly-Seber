@@ -12,7 +12,7 @@ This approach has some efficiency benefits and perhaps costs (not sure, yet). In
 
 3) for individuals never detected, whether in the super population or not: I propose entire z vectors for each individual. I propose the recruitment occasion, z.start, (including the possibility of being there in the first year). Then, I simulate survival from the proposed recruitment occasion. Then, I use a Metropolis-Hastings update. 
 
-4) handling the superpopulation: I use count prior data augmentation https://github.com/benaug/SCR-Count-Prior-Data-Augmentation
+4) handling the superpopulation: I use N-prior data augmentation https://github.com/benaug/SCR-N-Prior-Data-Augmentation
 
 
 Final Note: Ruth King suggested to me that the birth and death primary occasions could be updated instead of the individual z's right before I worked on this. I would like to think I would have thought of this myself, but can't be sure! So, I will credit Ruth for this observation. Of course, she bears no responsibility for the correctness of my full algorithm or code!
