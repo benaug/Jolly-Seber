@@ -20,6 +20,11 @@ source("Nimble Functions JS-SCR_SexPopDy.R") #contains custom distributions and 
 source("sSampler Fixed.R") # activity center sampler that proposes from prior when z.super=0.
 #this one works for fixed activity centers over years only
 
+#If using Nimble version 0.13.1 and you must run this line 
+nimbleOptions(determinePredictiveNodesInModel = FALSE)
+# #If using Nimble before version 0.13.1, run this line instead
+# nimble:::setNimbleOption('MCMCjointlySamplePredictiveBranches', FALSE)
+
 n.year <- 4 #number of years
 lambda.y1.M <- 75 #expected male N in year 1
 lambda.y1.F <- 125 #expected female N in year 1

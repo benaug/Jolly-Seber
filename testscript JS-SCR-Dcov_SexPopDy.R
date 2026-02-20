@@ -20,6 +20,11 @@ source("Nimble Functions JS-SCR-Dcov_SexPopDy.R") #contains custom distributions
 source("sSampler Dcov.R") # activity center sampler that proposes from prior when z.super=0.
 source("mask.check.R")
 
+#If using Nimble version 0.13.1 and you must run this line 
+nimbleOptions(determinePredictiveNodesInModel = FALSE)
+# #If using Nimble before version 0.13.1, run this line instead
+# nimble:::setNimbleOption('MCMCjointlySamplePredictiveBranches', FALSE)
+
 #get some colors
 library(RColorBrewer)
 cols1 <- brewer.pal(9,"Greens")
