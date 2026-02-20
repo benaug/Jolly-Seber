@@ -148,9 +148,6 @@ data$N.recruit
 data$N.survive
 data$N[1]+sum(data$N.recruit) #N.super
 
-
-#500 iters in 20 min
-
 #Some sanity checks I used during debugging. Just checking that final
 #model states match between z and N objects
 
