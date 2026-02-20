@@ -6,7 +6,7 @@ e2dist = function (x, y){
 
 sim.JS.SexPopDy <- function(lambda.y1.M=NA,lambda.y1.F=NA,
                             n.year=NA,gamma.sex=NA,phi.sex=NA,
-                   p0.sex=NA,sigma.sex=NA,X=NA,buff=NA,K=NA,p.obs.sex=NA){
+                   p.sex=NA,K=NA,p.obs.sex=NA){
   
   #Population dynamics
   N <- N.M <- N.F <- rep(NA,n.year)
