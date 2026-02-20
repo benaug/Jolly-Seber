@@ -4,9 +4,10 @@ e2dist = function (x, y){
   matrix(dvec, nrow = nrow(x), ncol = nrow(y), byrow = F)
 }
 
-sim.JS.SexPopDy <- function(lambda.y1.M=NA,lambda.y1.F=NA,n.year=NA,
-                                gamma.sex=NA,phi.sex=NA,
-                   p.sex=NA,K=NA,p.obs.sex=NA){
+sim.JS.SexPopDy <- function(lambda.y1.M=NA,lambda.y1.F=NA,
+                            n.year=NA,gamma.sex=NA,phi.sex=NA,
+                   p0.sex=NA,sigma.sex=NA,X=NA,buff=NA,K=NA,p.obs.sex=NA){
+  
   #Population dynamics
   N <- N.M <- N.F <- rep(NA,n.year)
   N.recruit.M <- N.survive.M <- ER.M <- rep(NA,n.year-1)

@@ -23,6 +23,10 @@ source("Nimble Functions JS-SCR-Dcov.R") #contains custom distributions and upda
 source("sSampler Dcov.R") # activity center sampler that proposes from prior when z.super=0.
 source("mask.check.R")
 
+#get some colors
+library(RColorBrewer)
+cols1 <- brewer.pal(9,"Greens")
+
 #If using Nimble version 0.13.1 and you must run this line 
 nimbleOptions(determinePredictiveNodesInModel = FALSE)
 # #If using Nimble before version 0.13.1, run this line instead
@@ -76,15 +80,17 @@ n.cells <- nrow(dSS)
 n.cells.x <- length(x.vals)
 n.cells.y <- length(y.vals)
 
-#create a density covariate
-D.cov <- rep(NA,n.cells)
-for(c in 1:n.cells){
-  D.cov[c] <-  7*dSS[c,1] - 0.5*dSS[c,1]^2 + 7*dSS[c,2] - 0.5*dSS[c,2]^2
-}
-D.cov <- as.numeric(scale(D.cov))
+#simulate a D.cov, higher cov.pars for large scale cov
+library(fields)
+set.seed(13235)
+grid <- list(x=x.vals,y=y.vals) 
+obj <- Exp.image.cov(grid=grid,aRange=5,setup=TRUE)
+D.cov <- sim.rf(obj)
+D.cov <- as.numeric(scale(D.cov)) #scale
+par(mfrow=c(1,1),ask=FALSE)
 
-image(x.vals,y.vals,matrix(D.cov,n.cells.x,n.cells.y),main="Covariate Value")
-points(X.all,pch=4,cex=0.75,col="lightblue")
+image(x.vals,y.vals,matrix(D.cov,n.cells.x,n.cells.y),main="D.cov",xlab="X",ylab="Y",col=cols1)
+points(X.all,pch=4)
 
 
 #Additionally, maybe we want to exclude "non-habitat"
@@ -99,8 +105,8 @@ InSS[dSS.tmp[,1]>12&dSS.tmp[,2]>12] <- 0
 image(x.vals,y.vals,matrix(InSS,n.cells.x,n.cells.y),main="Habitat")
 
 #Density covariates
-D.beta0 <- -2
-D.beta1 <- 2
+D.beta0 <- -1.25
+D.beta1 <- 1
 #what is implied expected N in state space?
 lambda.cell <- InSS*exp(D.beta0 + D.beta1*D.cov)*cellArea
 sum(lambda.cell) #expected N in state space
