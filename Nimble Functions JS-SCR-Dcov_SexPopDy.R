@@ -107,7 +107,7 @@ zSampler <- nimbleFunction(
     sex.up <- control$sex.up
     calcNodes <- control$calcNodes
   },
-  run = function() {
+  run = function(){
     # 1) Detected guy updates: z.start, z.stop
     # 1a) z start update (z.stop update below)
     for(i in 1:M){
@@ -824,7 +824,6 @@ zSampler <- nimbleFunction(
             }
             #3) Update N.survive
             model$N.survive.M <<- model$N.M[2:n.year] - model$N.recruit.M #survivors are guys alive in year g-1 minus recruits in this year g
-            model$calculate(ER.M.nodes) #update ER when N updated
           }else{
             model$N.F <<- model$N.F + model$z[pick,]
             if(model$z.start[pick] > 1){ #if wasn't in pop in year 1
@@ -832,10 +831,11 @@ zSampler <- nimbleFunction(
             }
             #3) Update N.survive
             model$N.survive.F <<- model$N.F[2:n.year] - model$N.recruit.F #survivors are guys alive in year g-1 minus recruits in this year g
-            model$calculate(ER.F.nodes) #update ER when N updated
           }
           model$calculate(pd.nodes[pick.idx]) #update pd nodes when z changes
           #get proposed logprobs for N and y
+          model$calculate(ER.M.nodes) #update ER when N updated
+          model$calculate(ER.F.nodes) #update ER when N updated
           lp.proposed.N.M <- model$calculate(N.M.nodes[1])
           lp.proposed.N.F <- model$calculate(N.F.nodes[1])
           lp.proposed.N.recruit.M <- model$calculate(N.recruit.M.nodes)
